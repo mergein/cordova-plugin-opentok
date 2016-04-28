@@ -638,6 +638,12 @@ TBSession = (function() {
     this.eventReceived = __bind(this.eventReceived, this);
     this.publish = __bind(this.publish, this);
     this.publish = __bind(this.publish, this);
+    this.capabilities = {
+      forceDisconnect: 0,
+      forceUnpublish: 0,
+      publish: 1,
+      subscribe: 1
+    };
     this.apiKey = this.apiKey.toString();
     this.connections = {};
     this.streams = {};

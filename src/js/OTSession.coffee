@@ -128,6 +128,12 @@ class TBSession
     return Cordova.exec(TBSuccess, TBError, OTPlugin, "unsubscribe", [streamId] )
 
   constructor: (@apiKey, @sessionId) ->
+    @capabilities = {
+      forceDisconnect: 0, # not implemented
+      forceUnpublish: 0, # not implemented
+      publish: 1, # assuming all mobile devices have a camera and microphone (and app is trusted to use them)
+      subscribe: 1 # assuming always possible
+    }
     @apiKey = @apiKey.toString()
     @connections = {}
     @streams = {}
