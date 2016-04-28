@@ -203,17 +203,33 @@
 // Called by session.publish(top, left)
 - (void)publish:(CDVInvokedUrlCommand*)command{
     NSLog(@"iOS Publish stream to session");
-    [_session publish:_publisher error:nil];
+    OTError *error;
+    [_session publish:_publisher error:&error];
     
-    // Return to Javascript
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    if (error) {
+        NSLog(@"Session.publish failed: %@", [error localizedDescription]);
+    }
+    
+    CDVPluginResult* pluginResult = error ?
+        [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]] :
+        [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 // Called by session.unpublish(...)
 - (void)unpublish:(CDVInvokedUrlCommand*)command{
     NSLog(@"iOS Unpublishing publisher");
+    OTError *error;
     [_session unpublish:_publisher error:nil];
+    
+    if (error) {
+        NSLog(@"Session.unpublish failed: %@", [error localizedDescription]);
+    }
+    
+    CDVPluginResult* pluginResult = error ?
+        [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]] :
+        [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 // Called by session.subscribe(streamId, top, left)
@@ -222,7 +238,6 @@
     
     // Get Parameters
     NSString* sid = [command.arguments objectAtIndex:0];
-    
     
     int top = [[command.arguments objectAtIndex:1] intValue];
     int left = [[command.arguments objectAtIndex:2] intValue];
