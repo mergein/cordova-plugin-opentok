@@ -2,8 +2,8 @@ window.OT = {
   checkSystemRequirements: function() {
     return 1;
   },
-  initPublisher: function(one, two, three) {
-    return new TBPublisher(one, two, three);
+  initPublisher: function(targetElement, properties, completionHandler) {
+    return new TBPublisher(targetElement, properties, completionHandler);
   },
   initSession: function(apiKey, sessionId) {
     if (sessionId == null) {
@@ -287,23 +287,32 @@ var TBPublisher,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 TBPublisher = (function() {
-  function TBPublisher(one, two, three) {
+  function TBPublisher(targetElement, properties, completionHandler) {
     this.removePublisherElement = __bind(this.removePublisherElement, this);
     this.streamDestroyed = __bind(this.streamDestroyed, this);
     this.streamCreated = __bind(this.streamCreated, this);
     this.eventReceived = __bind(this.eventReceived, this);
     this.setSession = __bind(this.setSession, this);
-    var borderRadius, cameraName, height, name, position, publishAudio, publishVideo, ratios, width, zIndex, _ref, _ref1, _ref2, _ref3;
-    this.sanitizeInputs(one, two, three);
+    var borderRadius, cameraName, height, name, obj, onError, onSuccess, position, publishAudio, publishVideo, ratios, width, zIndex, _ref, _ref1, _ref2, _ref3;
+    if (targetElement == null) {
+      this.domId = TBGenerateDomHelper();
+      this.element = document.getElementById(this.domId);
+    } else if (typeof targetElement === "string") {
+      this.domId = targetElement;
+      this.element = document.getElementById(this.domId);
+    } else {
+      this.element = targetElement;
+      this.domId = targetElement.id;
+    }
     pdebug("creating publisher", {});
     position = getPosition(this.domId);
     name = "";
     publishAudio = "true";
     publishVideo = "true";
     cameraName = "front";
-    zIndex = TBGetZIndex(document.getElementById(this.domId));
+    zIndex = TBGetZIndex(this.element);
     ratios = TBGetScreenRatios();
-    borderRadius = TBGetBorderRadius(document.getElementById(this.domId));
+    borderRadius = TBGetBorderRadius(this.element);
     if (this.properties != null) {
       width = (_ref = this.properties.width) != null ? _ref : position.width;
       height = (_ref1 = this.properties.height) != null ? _ref1 : position.height;
@@ -320,15 +329,26 @@ TBPublisher = (function() {
       width = DefaultWidth;
       height = DefaultHeight;
     }
-    this.pubElement = document.getElementById(this.domId);
-    replaceWithVideoStream(this.domId, PublisherStreamId, {
+    obj = replaceWithVideoStream(this.domId, PublisherStreamId, {
       width: width,
       height: height
     });
-    position = getPosition(this.domId);
+    position = getPosition(obj.id);
     TBUpdateObjects();
     OT.getHelper().eventing(this);
-    Cordova.exec(TBSuccess, TBError, OTPlugin, "initPublisher", [name, position.top, position.left, width, height, zIndex, publishAudio, publishVideo, cameraName, ratios.widthRatio, ratios.heightRatio, borderRadius]);
+    onSuccess = function(result) {
+      if (completionHandler != null) {
+        completionHandler();
+      }
+      return TBSuccess(result);
+    };
+    onError = function(result) {
+      if (completionHandler != null) {
+        completionHandler(result);
+      }
+      return TBError(result);
+    };
+    Cordova.exec(onSuccess, onError, OTPlugin, "initPublisher", [name, position.top, position.left, width, height, zIndex, publishAudio, publishVideo, cameraName, ratios.widthRatio, ratios.heightRatio, borderRadius]);
     Cordova.exec(this.eventReceived, TBSuccess, OTPlugin, "addEvent", ["publisherEvents"]);
   }
 
@@ -366,12 +386,12 @@ TBPublisher = (function() {
   };
 
   TBPublisher.prototype.removePublisherElement = function() {
-    this.pubElement.parentNode.removeChild(this.pubElement);
-    return this.pubElement = false;
+    this.element.parentNode.removeChild(this.element);
+    return this.element = void 0;
   };
 
   TBPublisher.prototype.destroy = function() {
-    if (this.pubElement) {
+    if (this.element) {
       return Cordova.exec(this.removePublisherElement, TBError, OTPlugin, "destroyPublisher", []);
     }
   };
@@ -422,50 +442,6 @@ TBPublisher = (function() {
     return Cordova.exec(TBSuccess, TBError, OTPlugin, media, [publishState]);
   };
 
-  TBPublisher.prototype.sanitizeInputs = function(one, two, three) {
-    var position;
-    if ((three != null)) {
-      this.apiKey = one;
-      this.domId = two;
-      this.properties = three;
-    } else if ((two != null)) {
-      if (typeof two === "object") {
-        this.properties = two;
-        if (document.getElementById(one)) {
-          this.domId = one;
-        } else {
-          this.apiKey = one;
-        }
-      } else {
-        this.apiKey = one;
-        this.domId = two;
-      }
-    } else if ((one != null)) {
-      if (typeof one === "object") {
-        this.properties = one;
-      } else if (document.getElementById(one)) {
-        this.domId = one;
-      }
-    }
-    this.apiKey = this.apiKey != null ? this.apiKey : "";
-    this.properties = this.properties && typeof (this.properties === "object") ? this.properties : {};
-    if (this.domId && document.getElementById(this.domId)) {
-      if (!this.properties.width || !this.properties.height) {
-        console.log("domId exists but properties width or height is not specified");
-        position = getPosition(this.domId);
-        console.log(" width: " + position.width + " and height: " + position.height + " for domId " + this.domId + ", and top: " + position.top + ", left: " + position.left);
-        if (position.width > 0 && position.height > 0) {
-          this.properties.width = position.width;
-          this.properties.height = position.height;
-        }
-      }
-    } else {
-      this.domId = TBGenerateDomHelper();
-    }
-    this.domId = this.domId && document.getElementById(this.domId) ? this.domId : TBGenerateDomHelper();
-    return this.apiKey = this.apiKey.toString();
-  };
-
   return TBPublisher;
 
 })();
@@ -507,30 +483,29 @@ TBSession = (function() {
     return this;
   };
 
-  TBSession.prototype.publish = function(divName, properties) {
+  TBSession.prototype.publish = function(publisher, completionHandler) {
+    var onError, onSuccess;
     if (this.alreadyPublishing) {
       pdebug("Session is already publishing", {});
       return;
     }
     this.alreadyPublishing = true;
-    this.publisher = new TBPublisher(divName, properties);
-    return this.publish(this.publisher);
-  };
-
-  TBSession.prototype.publish = function() {
-    if (this.alreadyPublishing) {
-      pdebug("Session is already publishing", {});
-      return;
-    }
-    this.alreadyPublishing = true;
-    if (typeof arguments[0] === "object") {
-      this.publisher = arguments[0];
-    } else {
-      this.publisher = OT.initPublisher(arguments);
-    }
-    this.publisher.setSession(this);
-    Cordova.exec(TBSuccess, TBError, OTPlugin, "publish", []);
-    return this.publisher;
+    this.publisher = publisher;
+    publisher.setSession(this);
+    onSuccess = function(result) {
+      if (completionHandler != null) {
+        completionHandler();
+      }
+      return TBSuccess(result);
+    };
+    onError = function(result) {
+      if (completionHandler != null) {
+        completionHandler(result);
+      }
+      return TBError(result);
+    };
+    Cordova.exec(onSuccess, onError, OTPlugin, "publish", []);
+    return publisher;
   };
 
   TBSession.prototype.signal = function(signal, signalCompletionHandler) {
@@ -594,18 +569,31 @@ TBSession = (function() {
     return subscriber;
   };
 
-  TBSession.prototype.unpublish = function() {
-    var element;
+  TBSession.prototype.unpublish = function(publisher) {
+    var element, onError, onSuccess;
+    if (publisher !== this.publisher) {
+      pdebug("Wrong publisher specified", {});
+      return;
+    }
     this.alreadyPublishing = false;
+    this.publisher = null;
     console.log("JS: Unpublish");
-    element = document.getElementById(this.publisher.domId);
+    element = publisher.element;
     if (element) {
       if (element.parentNode) {
         element.parentNode.removeChild(element);
       }
       TBUpdateObjects();
     }
-    return Cordova.exec(TBSuccess, TBError, OTPlugin, "unpublish", []);
+    onSuccess = function(result) {
+      publisher.destroy();
+      return TBSuccess(result);
+    };
+    onError = function(result) {
+      publisher.destroy();
+      return TBError(result);
+    };
+    return Cordova.exec(onSuccess, onError, OTPlugin, "unpublish", []);
   };
 
   TBSession.prototype.unsubscribe = function(subscriber) {
@@ -636,7 +624,6 @@ TBSession = (function() {
     this.connectionDestroyed = __bind(this.connectionDestroyed, this);
     this.connectionCreated = __bind(this.connectionCreated, this);
     this.eventReceived = __bind(this.eventReceived, this);
-    this.publish = __bind(this.publish, this);
     this.publish = __bind(this.publish, this);
     this.capabilities = {
       forceDisconnect: 0,

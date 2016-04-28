@@ -36,25 +36,23 @@ class TBSession
     return @
   getSubscribersForStream: (stream) ->
     return @
-  publish: (divName, properties) =>
+  publish: (publisher, completionHandler) =>
     if( @alreadyPublishing )
       pdebug("Session is already publishing", {})
       return
     @alreadyPublishing = true
-    @publisher = new TBPublisher(divName, properties)
-    @publish( @publisher )
-  publish: () =>
-    if( @alreadyPublishing )
-      pdebug("Session is already publishing", {})
-      return
-    @alreadyPublishing = true
-    if(typeof arguments[0] == "object")
-      @publisher = arguments[0]
-    else
-      @publisher = OT.initPublisher(arguments)
-    @publisher.setSession(@)
-    Cordova.exec(TBSuccess, TBError, OTPlugin, "publish", [] )
-    return @publisher
+    @publisher = publisher
+    publisher.setSession(@)
+    onSuccess = (result) ->
+      if completionHandler?
+        completionHandler()
+      TBSuccess(result)
+    onError = (result) ->
+      if completionHandler?
+        completionHandler(result)
+      TBError(result)
+    Cordova.exec(onSuccess, onError, OTPlugin, "publish", [] )
+    return publisher
   signal: (signal, signalCompletionHandler) ->
     # signal payload: [type, data, connection( separated by spaces )]
     type = if signal.type? then signal.type else ""
@@ -106,15 +104,25 @@ class TBSession
     domId = TBGenerateDomHelper()
     subscriber = new TBSubscriber(one, domId, {})
     return subscriber
-  unpublish:() ->
+  unpublish:(publisher) ->
+    if( publisher != @publisher )
+      pdebug("Wrong publisher specified", {})
+      return
     @alreadyPublishing = false
+    @publisher = null
     console.log("JS: Unpublish")
-    element = document.getElementById( @publisher.domId )
+    element = publisher.element
     if(element)
       if (element.parentNode)
         element.parentNode.removeChild(element)
       TBUpdateObjects()
-    return Cordova.exec(TBSuccess, TBError, OTPlugin, "unpublish", [] )
+    onSuccess = (result) ->
+      publisher.destroy()
+      TBSuccess(result)
+    onError = (result) ->
+      publisher.destroy()
+      TBError(result)
+    return Cordova.exec(onSuccess, onError, OTPlugin, "unpublish", [] )
   unsubscribe: (subscriber) ->
     console.log("JS: Unsubscribe")
     streamId = subscriber.streamId
