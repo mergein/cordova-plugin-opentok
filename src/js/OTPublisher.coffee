@@ -81,12 +81,16 @@ class TBPublisher
     return @
 
   removePublisherElement: =>
-    @element.parentNode.removeChild(@element)
+    if(@element && @element.parentNode)
+      @element.parentNode.removeChild(@element)
     @element = undefined
 
   destroy: ->
+    onSuccess = (result) =>
+      @removePublisherElement()
+      TBSuccess(result)
     if(@element)
-      Cordova.exec( @removePublisherElement, TBError, OTPlugin, "destroyPublisher", [])
+      Cordova.exec( onSuccess, TBError, OTPlugin, "destroyPublisher", [])
   getImgData: ->
     return ""
   getStyle: ->

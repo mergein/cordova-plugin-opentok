@@ -386,13 +386,22 @@ TBPublisher = (function() {
   };
 
   TBPublisher.prototype.removePublisherElement = function() {
-    this.element.parentNode.removeChild(this.element);
+    if (this.element && this.element.parentNode) {
+      this.element.parentNode.removeChild(this.element);
+    }
     return this.element = void 0;
   };
 
   TBPublisher.prototype.destroy = function() {
+    var onSuccess;
+    onSuccess = (function(_this) {
+      return function(result) {
+        _this.removePublisherElement();
+        return TBSuccess(result);
+      };
+    })(this);
     if (this.element) {
-      return Cordova.exec(this.removePublisherElement, TBError, OTPlugin, "destroyPublisher", []);
+      return Cordova.exec(onSuccess, TBError, OTPlugin, "destroyPublisher", []);
     }
   };
 
