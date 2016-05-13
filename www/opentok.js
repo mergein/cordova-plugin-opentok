@@ -24,6 +24,11 @@ window.OT = {
   setLogLevel: function(a) {
     return console.log("Log Level Set");
   },
+  setErrorCallback: (function(_this) {
+    return function(callback) {
+      return _this.errorCallback = callback;
+    };
+  })(this),
   upgradeSystemRequirements: function() {
     return {};
   },
@@ -217,7 +222,11 @@ replaceWithVideoStream = function(divName, streamId, properties) {
 };
 
 TBError = function(error) {
-  return navigator.notification.alert(error);
+  if (window.OT.errorCallback) {
+    return window.OT.errorCallback(error);
+  } else {
+    return console.error(error);
+  }
 };
 
 TBSuccess = function() {};
