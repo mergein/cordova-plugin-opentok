@@ -60,7 +60,10 @@ replaceWithVideoStream = (divName, streamId, properties) ->
   return element
 
 TBError = (error) ->
-  navigator.notification.alert(error)
+  if (window.OT.errorCallback)
+    window.OT.errorCallback(error)
+  else
+    console.error(error)
 
 TBSuccess = ->
   # console.log("success")

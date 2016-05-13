@@ -28,6 +28,8 @@ window.OT =
       Cordova.exec(handler, TBError, OTPlugin, "exceptionHandler", [] )
   setLogLevel: (a) ->
     console.log("Log Level Set")
+  setErrorCallback: (callback) =>
+    @errorCallback = callback
   upgradeSystemRequirements: ->
     return {}
   updateViews: ->
