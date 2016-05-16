@@ -1,6 +1,7 @@
 {
-  "name": "Cordova-Plugin-OpenTok",
+  "name": "cordova-plugin-opentok",
   "version": "2.2.0",
+  "main": "./www/opentok.js",
   "scripts": {
     "build": "grunt",
     "watch": "grunt watch"
