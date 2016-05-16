@@ -1,4 +1,8 @@
-window.OT = {
+'use strict';
+
+console.log('hello, world!');
+//# sourceMappingURL=babel.js.map
+;window.OT = {
   checkSystemRequirements: function() {
     return 1;
   },

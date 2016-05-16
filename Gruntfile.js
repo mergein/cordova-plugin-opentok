@@ -4,13 +4,30 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     watch:{
-      scripts: {
-        files:['**/*.coffee'],
-        tasks:["coffee", "concat"],
-        options:{
-          spawn: true,
+      scripts: [ {
+        files: ['src/**/*.coffee'],
+        tasks: ["coffee", "concat"],
+        options: {
+          spawn: true
         }
+      }, {
+        files: ['src/**/*.js'],
+        tasks: ['babel', 'concat'],
+        options: {
+          spawn: true
+        }
+      } ],
+    },
+    babel: {
+      options: {
+        sourceMap: true,
+        presets: ['es2015']
       },
+      dist: {
+        files: {
+          './www/babel.js': 'src/js/*.js'
+        }
+      }
     },
     coffee: {
       compileBare:{
@@ -18,7 +35,7 @@ module.exports = function(grunt) {
           bare: true
         },
         files: {
-          "./www/opentok.js" : "./src/js/*.coffee"
+          "./www/coffeescript.js" : "./src/js/*.coffee"
         }
       }
     },
@@ -27,7 +44,7 @@ module.exports = function(grunt) {
         separator: ';'
       },
       dist:{
-        src:["./www/opentok.js", "./src/js/lib/OT-common-js-helpers.js"],
+        src:["./www/babel.js", "./www/coffeescript.js", "./src/js/lib/OT-common-js-helpers.js"],
         dest:"./www/opentok.js"
       }
     },
@@ -47,7 +64,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-babel');
 
   // Default task(s).
-  grunt.registerTask('default', ["coffee", "concat"]);
+  grunt.registerTask('default', ["coffee", "babel", "concat"]);
 };
