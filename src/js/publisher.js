@@ -160,5 +160,3 @@ export class TBPublisher {
     Cordova.exec(TBSuccess, TBError, OTPlugin, media, [publishState]);
   }
 }
-
-window.TBPublisher = TBPublisher;

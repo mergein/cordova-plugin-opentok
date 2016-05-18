@@ -1,56 +1,59 @@
-module.exports = function(grunt) {
+var babel = require('rollup-plugin-babel');
 
+module.exports = function (grunt) {
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    watch:{
-      scripts: [ {
+    watch: {
+      scripts: [{
         files: ['src/**/*.coffee'],
-        tasks: ["coffee", "concat"],
+        tasks: ['coffee', 'concat'],
         options: {
           spawn: true
         }
       }, {
         files: ['src/**/*.js'],
-        tasks: ['babel', 'concat'],
+        tasks: ['rollup', 'concat'],
         options: {
           spawn: true
         }
-      } ],
-    },
-    babel: {
-      options: {
-        sourceMap: true,
-        presets: ['es2015']
-      },
-      dist: {
-        files: {
-          './www/babel.js': 'src/js/*.js'
-        }
-      }
+      }]
     },
     coffee: {
-      compileBare:{
-        options:{
+      compileBare: {
+        options: {
           bare: true
         },
         files: {
-          "./www/coffeescript.js" : "./src/js/*.coffee"
+          './www/coffeescript.js': './src/js/*.coffee'
         }
       }
     },
-    concat:{
-      options:{
+    concat: {
+      options: {
         separator: ';'
       },
-      dist:{
-        src:["./www/babel.js", "./www/coffeescript.js", "./src/js/lib/OT-common-js-helpers.js"],
-        dest:"./www/opentok.js"
+      dist: {
+        src: ['./www/coffeescript.js', './src/js/lib/OT-common-js-helpers.js', './www/rollup.js'],
+        dest: './www/opentok.js'
+      }
+    },
+    rollup: {
+      options: {
+        plugins: [
+          babel({
+            exclude: './node_modules/**'
+          })
+        ]
+      },
+      files: {
+        dest: './www/rollup.js',
+        src: 'src/js/index.js'
       }
     },
     uglify: {
       options: {
-        banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+        banner: '/*! <%= pkg.name %> <%= grunt.template.today(\'yyyy-mm-dd\') %> */\n'
       },
       build: {
         src: 'www/opentok.js',
@@ -59,13 +62,13 @@ module.exports = function(grunt) {
     }
   });
 
-  // Load the plugin that provides the "uglify" task.
+  // Load the plugin that provides the 'uglify' task.
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-babel');
+  grunt.loadNpmTasks('grunt-rollup');
 
   // Default task(s).
-  grunt.registerTask('default', ["coffee", "babel", "concat"]);
+  grunt.registerTask('default', ['coffee', 'rollup', 'concat']);
 };

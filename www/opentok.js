@@ -1,72 +1,3 @@
-'use strict';
-
-console.log('hello, world!');
-//# sourceMappingURL=babel.js.map
-;window.OT = {
-  checkSystemRequirements: function() {
-    return 1;
-  },
-  initPublisher: function(targetElement, properties, completionHandler) {
-    return new TBPublisher(targetElement, properties, completionHandler);
-  },
-  initSession: function(apiKey, sessionId) {
-    if (sessionId == null) {
-      this.showError("OT.initSession takes 2 parameters, your API Key and Session ID");
-    }
-    return new TBSession(apiKey, sessionId);
-  },
-  log: function(message) {
-    return pdebug("TB LOG", message);
-  },
-  off: function(event, handler) {},
-  on: function(event, handler) {
-    if (event === "exception") {
-      console.log("JS: TB Exception Handler added");
-      return Cordova.exec(handler, TBError, OTPlugin, "exceptionHandler", []);
-    }
-  },
-  setLogLevel: function(a) {
-    return console.log("Log Level Set");
-  },
-  setErrorCallback: (function(_this) {
-    return function(callback) {
-      return _this.errorCallback = callback;
-    };
-  })(this),
-  upgradeSystemRequirements: function() {
-    return {};
-  },
-  updateViews: function() {
-    return TBUpdateObjects();
-  },
-  getHelper: function() {
-    if (typeof jasmine === "undefined" || !jasmine || !jasmine['getEnv']) {
-      window.jasmine = {
-        getEnv: function() {}
-      };
-    }
-    this.OTHelper = this.OTHelper || OTHelpers.noConflict();
-    return this.OTHelper;
-  },
-  showError: function(a) {
-    return alert(a);
-  },
-  addEventListener: function(event, handler) {
-    return this.on(event, handler);
-  },
-  removeEventListener: function(type, handler) {
-    return this.off(type, handler);
-  }
-};
-
-window.TB = OT;
-
-window.addEventListener("orientationchange", (function() {
-  setTimeout((function() {
-    OT.updateViews();
-  }), 1000);
-}), false);
-
 var TBConnection;
 
 TBConnection = (function() {
@@ -295,178 +226,6 @@ TBGetBorderRadius = function(ele) {
 pdebug = function(msg, data) {
   return console.log("JS Lib: " + msg + " - ", data);
 };
-
-var TBPublisher,
-  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-TBPublisher = (function() {
-  function TBPublisher(targetElement, properties, completionHandler) {
-    this.removePublisherElement = __bind(this.removePublisherElement, this);
-    this.streamDestroyed = __bind(this.streamDestroyed, this);
-    this.streamCreated = __bind(this.streamCreated, this);
-    this.eventReceived = __bind(this.eventReceived, this);
-    this.setSession = __bind(this.setSession, this);
-    var borderRadius, cameraName, height, name, obj, onError, onSuccess, position, publishAudio, publishVideo, ratios, width, zIndex, _ref, _ref1, _ref2, _ref3;
-    if (targetElement == null) {
-      this.domId = TBGenerateDomHelper();
-      this.element = document.getElementById(this.domId);
-    } else if (typeof targetElement === "string") {
-      this.domId = targetElement;
-      this.element = document.getElementById(this.domId);
-    } else {
-      this.element = targetElement;
-      this.domId = targetElement.id;
-    }
-    pdebug("creating publisher", {});
-    position = getPosition(this.domId);
-    name = "";
-    publishAudio = "true";
-    publishVideo = "true";
-    cameraName = "front";
-    zIndex = TBGetZIndex(this.element);
-    ratios = TBGetScreenRatios();
-    borderRadius = TBGetBorderRadius(this.element);
-    if (this.properties != null) {
-      width = (_ref = this.properties.width) != null ? _ref : position.width;
-      height = (_ref1 = this.properties.height) != null ? _ref1 : position.height;
-      name = (_ref2 = this.properties.name) != null ? _ref2 : "";
-      cameraName = (_ref3 = this.properties.cameraName) != null ? _ref3 : "front";
-      if ((this.properties.publishAudio != null) && this.properties.publishAudio === false) {
-        publishAudio = "false";
-      }
-      if ((this.properties.publishVideo != null) && this.properties.publishVideo === false) {
-        publishVideo = "false";
-      }
-    }
-    if ((width == null) || width === 0 || (height == null) || height === 0) {
-      width = DefaultWidth;
-      height = DefaultHeight;
-    }
-    obj = replaceWithVideoStream(this.domId, PublisherStreamId, {
-      width: width,
-      height: height
-    });
-    position = getPosition(obj.id);
-    TBUpdateObjects();
-    OT.getHelper().eventing(this);
-    onSuccess = function(result) {
-      if (completionHandler != null) {
-        completionHandler();
-      }
-      return TBSuccess(result);
-    };
-    onError = function(result) {
-      if (completionHandler != null) {
-        completionHandler(result);
-      }
-      return TBError(result);
-    };
-    Cordova.exec(onSuccess, onError, OTPlugin, "initPublisher", [name, position.top, position.left, width, height, zIndex, publishAudio, publishVideo, cameraName, ratios.widthRatio, ratios.heightRatio, borderRadius]);
-    Cordova.exec(this.eventReceived, TBSuccess, OTPlugin, "addEvent", ["publisherEvents"]);
-  }
-
-  TBPublisher.prototype.setSession = function(session) {
-    return this.session = session;
-  };
-
-  TBPublisher.prototype.eventReceived = function(response) {
-    pdebug("publisher event received", response);
-    return this[response.eventType](response.data);
-  };
-
-  TBPublisher.prototype.streamCreated = function(event) {
-    var streamEvent;
-    pdebug("publisher streamCreatedHandler", event);
-    pdebug("publisher streamCreatedHandler", this.session);
-    pdebug("publisher streamCreatedHandler", this.session.sessionConnection);
-    this.stream = new TBStream(event.stream, this.session.sessionConnection);
-    streamEvent = new TBEvent({
-      stream: this.stream
-    });
-    this.trigger("streamCreated", streamEvent);
-    return this;
-  };
-
-  TBPublisher.prototype.streamDestroyed = function(event) {
-    var streamEvent;
-    pdebug("publisher streamDestroyed event", event);
-    streamEvent = new TBEvent({
-      stream: this.stream,
-      reason: "clientDisconnected"
-    });
-    this.trigger("streamDestroyed", streamEvent);
-    return this;
-  };
-
-  TBPublisher.prototype.removePublisherElement = function() {
-    if (this.element && this.element.parentNode) {
-      this.element.parentNode.removeChild(this.element);
-    }
-    return this.element = void 0;
-  };
-
-  TBPublisher.prototype.destroy = function() {
-    var onSuccess;
-    onSuccess = (function(_this) {
-      return function(result) {
-        _this.removePublisherElement();
-        return TBSuccess(result);
-      };
-    })(this);
-    if (this.element) {
-      return Cordova.exec(onSuccess, TBError, OTPlugin, "destroyPublisher", []);
-    }
-  };
-
-  TBPublisher.prototype.getImgData = function() {
-    return "";
-  };
-
-  TBPublisher.prototype.getStyle = function() {
-    return {};
-  };
-
-  TBPublisher.prototype.publishAudio = function(state) {
-    this.publishMedia("publishAudio", state);
-    return this;
-  };
-
-  TBPublisher.prototype.publishVideo = function(state) {
-    this.publishMedia("publishVideo", state);
-    return this;
-  };
-
-  TBPublisher.prototype.setCameraPosition = function(cameraPosition) {
-    pdebug("setting camera position", {
-      cameraPosition: cameraPosition
-    });
-    Cordova.exec(TBSuccess, TBError, OTPlugin, "setCameraPosition", [cameraPosition]);
-    return this;
-  };
-
-  TBPublisher.prototype.setStyle = function(style, value) {
-    return this;
-  };
-
-  TBPublisher.prototype.publishMedia = function(media, state) {
-    var publishState;
-    if (media !== "publishAudio" && media !== "publishVideo") {
-      return;
-    }
-    publishState = "true";
-    if ((state != null) && (state === false || state === "false")) {
-      publishState = "false";
-    }
-    pdebug("setting publishstate", {
-      media: media,
-      publishState: publishState
-    });
-    return Cordova.exec(TBSuccess, TBError, OTPlugin, media, [publishState]);
-  };
-
-  return TBPublisher;
-
-})();
 
 var TBSession,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -3546,3 +3305,275 @@ OTHelpers.centerElement = function(element, width, height) {
   };
 
 })(window, window.OTHelpers);
+;var babelHelpers = {};
+
+babelHelpers.classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
+
+babelHelpers.createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+}();
+
+babelHelpers;
+
+/* global
+ *   Cordova, DefaultHeight, DefaultWidth, getPosition, OT, OTPlugin, pdebug, PublisherStreamId,
+ *   replaceWithVideoStream, TBError, TBEvent, TBGenerateDomHelper, TBGetBorderRadius,
+ *   TBGetScreenRatios, TBGetZIndex, TBStream, TBSuccess, TBUpdateObjects
+ */
+var TBPublisher = function () {
+  function TBPublisher(targetElement, properties, completionHandler) {
+    babelHelpers.classCallCheck(this, TBPublisher);
+
+    if (!targetElement) {
+      this.domId = TBGenerateDomHelper();
+      this.element = document.getElementById(this.domId);
+    } else if (typeof targetElement === 'string') {
+      this.domId = targetElement;
+      this.element = document.getElementById(this.domId);
+    } else {
+      this.element = targetElement;
+      this.domId = targetElement.id;
+    }
+    pdebug('creating publisher', {});
+    var position = getPosition(this.domId);
+    var name = '';
+    var publishAudio = 'true';
+    var publishVideo = 'true';
+    var cameraName = 'front';
+    var zIndex = TBGetZIndex(this.element);
+    var ratios = TBGetScreenRatios();
+    var borderRadius = TBGetBorderRadius(this.element);
+    var height = void 0;
+    var width = void 0;
+    if (this.properties) {
+      width = this.properties.width || position.width;
+      height = this.properties.height || position.height;
+      name = this.properties.name || '';
+      cameraName = this.properties.cameraName || 'front';
+      if (this.properties.publishAudio && !this.properties.publishAudio) {
+        publishAudio = 'false';
+      }
+      if (this.properties.publishVideo && !this.properties.publishVideo) {
+        publishVideo = 'false';
+      }
+    }
+    if (!width || !height) {
+      width = DefaultWidth;
+      height = DefaultHeight;
+    }
+    var obj = replaceWithVideoStream(this.domId, PublisherStreamId, { width: width, height: height });
+    position = getPosition(obj.id);
+    TBUpdateObjects();
+    OT.getHelper().eventing(this);
+    var onSuccess = function onSuccess(result) {
+      if (completionHandler) {
+        completionHandler();
+      }
+      return TBSuccess(result);
+    };
+    var onError = function onError(result) {
+      if (completionHandler) {
+        completionHandler(result);
+      }
+      return TBError(result);
+    };
+    var initPublisherParams = [name, position.top, position.left, width, height, zIndex, publishAudio, publishVideo, cameraName, ratios.widthRatio, ratios.heightRatio, borderRadius];
+    Cordova.exec(onSuccess, onError, OTPlugin, 'initPublisher', initPublisherParams);
+    Cordova.exec(this.eventReceived, TBSuccess, OTPlugin, 'addEvent', ['publisherEvents']);
+  }
+
+  babelHelpers.createClass(TBPublisher, [{
+    key: 'setSession',
+    value: function setSession(session) {
+      this.session = session;
+    }
+  }, {
+    key: 'eventReceived',
+    value: function eventReceived(response) {
+      pdebug('publisher event received', response);
+      return this[response.eventType](response.data);
+    }
+  }, {
+    key: 'streamCreated',
+    value: function streamCreated(event) {
+      pdebug('publisher streamCreatedHandler', event);
+      pdebug('publisher streamCreatedHandler', this.session);
+      pdebug('publisher streamCreatedHandler', this.session.sessionConnection);
+      this.stream = new TBStream(event.stream, this.session.sessionConnection);
+      var streamEvent = new TBEvent({ stream: this.stream });
+      this.trigger('streamCreated', streamEvent);
+      return this;
+    }
+  }, {
+    key: 'streamDestroyed',
+    value: function streamDestroyed(event) {
+      pdebug('publisher streamDestroyed event', event);
+      var streamEvent = new TBEvent({ stream: this.stream, reason: 'clientDisconnected' });
+      this.trigger('streamDestroyed', streamEvent);
+      // remove stream DOM?
+      return this;
+    }
+  }, {
+    key: 'removePublisherElement',
+    value: function removePublisherElement() {
+      if (this.element && this.element.parentNode) {
+        this.element.parentNode.removeChild(this.element);
+      }
+      this.element = undefined;
+    }
+  }, {
+    key: 'destroy',
+    value: function destroy() {
+      var _this = this;
+
+      var onSuccess = function onSuccess(result) {
+        _this.removePublisherElement();
+        return TBSuccess(result);
+      };
+      if (this.element) {
+        Cordova.exec(onSuccess, TBError, OTPlugin, 'destroyPublisher', []);
+      }
+    }
+  }, {
+    key: 'getImgData',
+    value: function getImgData() {
+      return '';
+    }
+  }, {
+    key: 'getStyle',
+    value: function getStyle() {
+      return {};
+    }
+  }, {
+    key: 'publishAudio',
+    value: function publishAudio(state) {
+      this.publishMedia('publishAudio', state);
+      return this;
+    }
+  }, {
+    key: 'publishVideo',
+    value: function publishVideo(state) {
+      this.publishMedia('publishVideo', state);
+      return this;
+    }
+  }, {
+    key: 'setCameraPosition',
+    value: function setCameraPosition(cameraPosition) {
+      pdebug('setting camera position', { cameraPosition: cameraPosition });
+      Cordova.exec(TBSuccess, TBError, OTPlugin, 'setCameraPosition', [cameraPosition]);
+      return this;
+    }
+  }, {
+    key: 'setStyle',
+    value: function setStyle() /* style, value */{
+      return this;
+    }
+  }, {
+    key: 'publishMedia',
+    value: function publishMedia(media, state) {
+      if (!['publishAudio', 'publishVideo'].contains(media)) {
+        return;
+      }
+      var publishState = 'true';
+      if (!state || state === 'false') {
+        publishState = 'false';
+      }
+      pdebug('setting publishstate', { media: media, publishState: publishState });
+      Cordova.exec(TBSuccess, TBError, OTPlugin, media, [publishState]);
+    }
+  }]);
+  return TBPublisher;
+}();
+
+var OT$1 = {
+  checkSystemRequirements: function checkSystemRequirements() {
+    return 1;
+  },
+  initPublisher: function initPublisher(targetElement, properties, completionHandler) {
+    return new TBPublisher(targetElement, properties, completionHandler);
+  },
+  initSession: function initSession(apiKey, sessionId) {
+    if (!sessionId) {
+      return this.showError('OT.initSession takes 2 parameters, your API Key and Session ID');
+    }
+    return new TBSession(apiKey, sessionId);
+  },
+  log: function log(message) {
+    return pdebug('TB LOG', message);
+  },
+  off: function off() /* event, handler */{
+    // TODO
+  },
+  on: function on(event, handler) {
+    // TB object only dispatches one type of event
+    if (event === 'exception') {
+      console.log('JS: TB Exception Handler added');
+      Cordova.exec(handler, TBError, OTPlugin, 'exceptionHandler', []);
+    }
+  },
+  setLogLevel: function setLogLevel() {
+    return console.log('Log Level Set');
+  },
+  setErrorCallback: function setErrorCallback(callback) {
+    this.errorCallback = callback;
+  },
+  upgradeSystemRequirements: function upgradeSystemRequirements() {
+    return {};
+  },
+  updateViews: function updateViews() {
+    return TBUpdateObjects();
+  },
+
+
+  // helpers
+  getHelper: function getHelper() {
+    if (typeof window.jasmine === 'undefined' || !window.jasmine || !window.jasmine.getEnv) {
+      window.jasmine = {
+        getEnv: function getEnv() {
+          return;
+        }
+      };
+    }
+    this.OTHelper = this.OTHelper || OTHelpers.noConflict();
+    return this.OTHelper;
+  },
+
+
+  // deprecating
+  showError: function showError(a) {
+    alert(a);
+  },
+  addEventListener: function addEventListener(event, handler) {
+    this.on(event, handler);
+  },
+  removeEventListener: function removeEventListener(type, handler) {
+    this.off(type, handler);
+  }
+};
+
+window.addEventListener('orientationchange', function () {
+  setTimeout(function () {
+    OT$1.updateViews();
+    return;
+  }, 1000);
+}, false);
+
+module.exports.OT = window.TB = window.OT = OT$1;

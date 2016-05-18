@@ -1,6 +1,7 @@
 /* globals Cordova, OTHelpers, OTPlugin, pdebug, TBError, TBPublisher, TBSession, TBUpdateObjects */
+import { TBPublisher } from './publisher';
 
-export const OT = {
+const OT = {
   checkSystemRequirements() {
     return 1;
   },
@@ -73,11 +74,11 @@ export const OT = {
   }
 };
 
-window.TB = window.OT = OT;
-
 window.addEventListener('orientationchange', () => {
   setTimeout(() => {
     OT.updateViews();
     return;
   }, 1000);
 }, false);
+
+module.exports.OT = window.TB = window.OT = OT;
