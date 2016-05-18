@@ -1,5 +1,6 @@
-/* globals Cordova, OTHelpers, OTPlugin, pdebug, TBError, TBPublisher, TBSession, TBUpdateObjects */
+/* globals Cordova, OTHelpers, OTPlugin, pdebug, TBError, TBPublisher, TBUpdateObjects */
 import { TBPublisher } from './publisher';
+import { TBSession } from './session';
 
 const OT = {
   checkSystemRequirements() {

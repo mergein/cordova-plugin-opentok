@@ -3306,6 +3306,11 @@ OTHelpers.centerElement = function(element, width, height) {
 
 })(window, window.OTHelpers);
 ;var babelHelpers = {};
+babelHelpers.typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+};
 
 babelHelpers.classCallCheck = function (instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -3501,6 +3506,347 @@ var TBPublisher = function () {
     }
   }]);
   return TBPublisher;
+}();
+
+/* global
+ *   Cordova, OT, OTError, OTPlugin, pdebug, streamElements, TB, TBConnection, TBError, TBEvent,
+ *   TBGenerateDomHelper, TBStream, TBStreamConnection, TBSubscriber, TBSuccess, TBUpdateObjects
+ */
+
+var TBSession = function () {
+  function TBSession(apiKey, sessionId) {
+    babelHelpers.classCallCheck(this, TBSession);
+
+    this.apiKey = apiKey;
+    this.sessionId = sessionId;
+    this.capabilities = {
+      forceDisconnect: 0, // not implemented
+      forceUnpublish: 0, // not implemented
+      // assuming all mobile devices have a camera and microphone (and app is trusted to use them)
+      publish: 1,
+      subscribe: 1 // assuming always possible
+    };
+    this.apiKey = this.apiKey.toString();
+    this.connections = {};
+    this.streams = {};
+    this.alreadyPublishing = false;
+    OT.getHelper().eventing(this);
+    Cordova.exec(TBSuccess, TBSuccess, OTPlugin, 'initSession', [this.apiKey, this.sessionId]);
+  }
+
+  babelHelpers.createClass(TBSession, [{
+    key: 'connect',
+    value: function connect(token, connectCompletionCallback) {
+      this.token = token;
+      if (typeof connectCompletionCallback !== 'function' && connectCompletionCallback) {
+        TB.showError('Session.connect() takes a token and an optional completionHandler');
+        return;
+      }
+      if (connectCompletionCallback) {
+        this.on('sessionConnected', connectCompletionCallback);
+      }
+      Cordova.exec(this.eventReceived, TBError, OTPlugin, 'addEvent', ['sessionEvents']);
+      Cordova.exec(TBSuccess, TBError, OTPlugin, 'connect', [this.token]);
+      return;
+    }
+  }, {
+    key: 'disconnect',
+    value: function disconnect() {
+      Cordova.exec(TBSuccess, TBError, OTPlugin, 'disconnect', []);
+    }
+  }, {
+    key: 'forceDisconnect',
+    value: function forceDisconnect() /* connection */{
+      return this;
+    }
+  }, {
+    key: 'forceUnpublish',
+    value: function forceUnpublish() /* stream */{
+      return this;
+    }
+  }, {
+    key: 'getPublisherForStream',
+    value: function getPublisherForStream() /* stream */{
+      return this;
+    }
+  }, {
+    key: 'getSubscribersForStream',
+    value: function getSubscribersForStream() /* stream */{
+      return this;
+    }
+  }, {
+    key: 'publish',
+    value: function publish(publisher, completionHandler) {
+      if (this.alreadyPublishing) {
+        pdebug('Session is already publishing', {});
+        return publisher;
+      }
+      this.alreadyPublishing = true;
+      this.publisher = publisher;
+      publisher.setSession(this);
+      var onSuccess = function onSuccess(result) {
+        if (completionHandler) {
+          completionHandler();
+        }
+        TBSuccess(result);
+      };
+      var onError = function onError(result) {
+        if (completionHandler) {
+          completionHandler(result);
+        }
+        TBError(result);
+      };
+      Cordova.exec(onSuccess, onError, OTPlugin, 'publish', []);
+      return publisher;
+    }
+  }, {
+    key: 'signal',
+    value: function signal(_signal /* , signalCompletionHandler*/) {
+      // signal payload: [type, data, connection( separated by spaces )]
+      var type = _signal.type ? _signal.type : '';
+      var data = _signal.data ? _signal.data : '';
+      var to = _signal.to ? _signal.to : '';
+      to = typeof to === 'string' ? to : to.connectionId;
+      Cordova.exec(TBSuccess, TBError, OTPlugin, 'signal', [type, data, to]);
+      return this;
+    }
+  }, {
+    key: 'subscribe',
+    value: function subscribe(one, two, three, four) {
+      this.subscriberCallbacks = {};
+      if (four) {
+        // stream,domId, properties, completionHandler
+        var _domId = two || TBGenerateDomHelper();
+        var _subscriber = new TBSubscriber(one, _domId, three);
+        this.subscriberCallbacks[one.streamId] = four;
+        return _subscriber;
+      }
+      if (three) {
+        // stream, domId, properties
+        // || stream, domId, completionHandler
+        // || stream, properties, completionHandler
+        if ((typeof two === 'string' || two.nodeType === 1) && (typeof three === 'undefined' ? 'undefined' : babelHelpers.typeof(three)) === 'object') {
+          console.log('stream, domId, props');
+          var _subscriber2 = new TBSubscriber(one, two, three);
+          return _subscriber2;
+        }
+        if ((typeof two === 'string' || two.nodeType === 1) && typeof three === 'function') {
+          console.log('stream, domId, completionHandler');
+          this.subscriberCallbacks[one.streamId] = three;
+          var _domId2 = two;
+          var _subscriber3 = new TBSubscriber(one, _domId2, {});
+          return _subscriber3;
+        }
+        if ((typeof two === 'undefined' ? 'undefined' : babelHelpers.typeof(two)) === 'object' && typeof three === 'function') {
+          console.log('stream, props, completionHandler');
+          this.subscriberCallbacks[one.streamId] = three;
+          var _domId3 = TBGenerateDomHelper();
+          var _subscriber4 = new TBSubscriber(one, _domId3, two);
+          return _subscriber4;
+        }
+      }
+      if (two) {
+        // stream, domId || stream, properties || stream,completionHandler
+        if (typeof two === 'string' || two.nodeType === 1) {
+          var _subscriber5 = new TBSubscriber(one, two, {});
+          return _subscriber5;
+        }
+        if ((typeof two === 'undefined' ? 'undefined' : babelHelpers.typeof(two)) === 'object') {
+          var _domId4 = TBGenerateDomHelper();
+          var _subscriber6 = new TBSubscriber(one, _domId4, two);
+          return _subscriber6;
+        }
+        if (typeof two === 'function') {
+          this.subscriberCallbacks[one.streamId] = two;
+          var _domId5 = TBGenerateDomHelper();
+          var _subscriber7 = new TBSubscriber(one, _domId5, {});
+          return _subscriber7;
+        }
+      }
+      // stream
+      var domId = TBGenerateDomHelper();
+      var subscriber = new TBSubscriber(one, domId, {});
+      return subscriber;
+    }
+  }, {
+    key: 'unpublish',
+    value: function unpublish(publisher) {
+      if (publisher !== this.publisher) {
+        pdebug('Wrong publisher specified', {});
+        return null;
+      }
+      this.alreadyPublishing = false;
+      this.publisher = null;
+      console.log('JS: Unpublish');
+      var element = publisher.element;
+      if (element) {
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+        TBUpdateObjects();
+      }
+      var onSuccess = function onSuccess(result) {
+        publisher.destroy();
+        TBSuccess(result);
+      };
+      var onError = function onError(result) {
+        publisher.destroy();
+        TBError(result);
+      };
+      return Cordova.exec(onSuccess, onError, OTPlugin, 'unpublish', []);
+    }
+  }, {
+    key: 'unsubscribe',
+    value: function unsubscribe(subscriber) {
+      console.log('JS: Unsubscribe');
+      var streamId = subscriber.streamId;
+      var element = subscriber.element || document.getElementById('TBStreamConnection' + streamId);
+      console.log('JS: Unsubscribing');
+      if (element) {
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+        delete streamElements[streamId];
+        TBUpdateObjects();
+      }
+      return Cordova.exec(TBSuccess, TBError, OTPlugin, 'unsubscribe', [streamId]);
+    }
+  }, {
+    key: 'cleanUpDom',
+    value: function cleanUpDom() {
+      var objects = document.getElementsByClassName('OT_root');
+      while (objects.length > 0) {
+        var e = objects[0];
+        if (e && e.parentNode && e.parentNode.removeChild) {
+          e.parentNode.removeChild(e);
+        }
+        objects = document.getElementsByClassName('OT_root');
+      }
+    }
+
+    // event listeners
+    // todo - other events: connectionCreated, connectionDestroyed, signal?, streamPropertyChanged,
+    //   signal:type?
+
+  }, {
+    key: 'eventReceived',
+    value: function eventReceived(response) {
+      pdebug('session event received', response);
+      return this[response.eventType](response.data);
+    }
+  }, {
+    key: 'connectionCreated',
+    value: function connectionCreated(event) {
+      var connection = new TBConnection(event.connection);
+      var connectionEvent = new TBEvent({ connection: connection });
+      this.connections[connection.connectionId] = connection;
+      this.trigger('connectionCreated', connectionEvent);
+      return this;
+    }
+  }, {
+    key: 'connectionDestroyed',
+    value: function connectionDestroyed(event) {
+      pdebug('connectionDestroyedHandler', event);
+      var connection = this.connections[event.connection.connectionId];
+      var connectionEvent = new TBEvent({ connection: connection, reason: 'clientDisconnected' });
+      this.trigger('connectionDestroyed', connectionEvent);
+      delete this.connections[connection.connectionId];
+      return this;
+    }
+  }, {
+    key: 'sessionConnected',
+    value: function sessionConnected(event) {
+      pdebug('sessionConnectedHandler', event);
+      this.trigger('sessionConnected');
+      this.connection = new TBConnection(event.connection);
+      this.connections[event.connection.connectionId] = this.connection;
+      return this;
+    }
+  }, {
+    key: 'sessionDisconnected',
+    value: function sessionDisconnected(event) {
+      pdebug('sessionDisconnected event', event);
+      this.alreadyPublishing = false;
+      var sessionDisconnectedEvent = new TBEvent({ reason: event.reason });
+      this.trigger('sessionDisconnected', sessionDisconnectedEvent);
+      this.cleanUpDom();
+      return this;
+    }
+  }, {
+    key: 'streamCreated',
+    value: function streamCreated(event) {
+      pdebug('streamCreatedHandler', event);
+      var stream = new TBStream(event.stream, this.connections[event.stream.connectionId]);
+      this.streams[stream.streamId] = stream;
+      var streamEvent = new TBEvent({ stream: stream });
+      this.trigger('streamCreated', streamEvent);
+      return this;
+    }
+  }, {
+    key: 'streamDestroyed',
+    value: function streamDestroyed(event) {
+      pdebug('streamDestroyed event', event);
+      var stream = this.streams[event.stream.streamId];
+      var streamEvent = new TBEvent({ stream: stream, reason: 'clientDisconnected' });
+      this.trigger('streamDestroyed', streamEvent);
+      // remove stream DOM
+      if (stream) {
+        var element = streamElements[stream.streamId];
+        if (element) {
+          if (element.parentNode) {
+            element.parentNode.removeChild(element);
+          }
+          delete streamElements[stream.streamId];
+          TBUpdateObjects();
+        }
+        delete this.streams[stream.streamId];
+      }
+      return this;
+    }
+  }, {
+    key: 'subscribedToStream',
+    value: function subscribedToStream(event) {
+      var streamId = event.streamId;
+
+      var callbackFunc = this.subscriberCallbacks[streamId];
+      if (callbackFunc) {
+        if (event.errorCode) {
+          var error = new OTError(event.errorCode);
+          callbackFunc(error);
+        } else {
+          callbackFunc();
+        }
+      }
+    }
+  }, {
+    key: 'signalReceived',
+    value: function signalReceived(event) {
+      pdebug('signalReceived event', event);
+      var streamEvent = new TBEvent({
+        type: event.type,
+        data: event.data,
+        from: this.connections[event.connectionId]
+      });
+      this.trigger('signal', streamEvent);
+      this.trigger('signal:' + event.type, streamEvent);
+    }
+
+    // deprecating
+
+  }, {
+    key: 'addEventListener',
+    value: function addEventListener(event, handler) {
+      this.on(event, handler);
+      return this;
+    }
+  }, {
+    key: 'removeEventListener',
+    value: function removeEventListener(event, handler) {
+      this.off(event, handler);
+      return this;
+    }
+  }]);
+  return TBSession;
 }();
 
 var OT$1 = {
