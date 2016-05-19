@@ -1,12 +1,24 @@
-/* global
- *   Cordova, DefaultHeight, DefaultWidth, getPosition, OT, OTPlugin, pdebug, PublisherStreamId,
- *   replaceWithVideoStream, TBError, TBEvent, TBGenerateDomHelper, TBGetBorderRadius,
- *   TBGetScreenRatios, TBGetZIndex, TBStream, TBSuccess, TBUpdateObjects
- */
+/* global Cordova, OT */
+import { DefaultHeight, DefaultWidth, OTPlugin, PublisherStreamId } from './constants';
+import { TBEvent } from './event';
+import {
+  getPosition,
+  pdebug,
+  replaceWithVideoStream,
+  tbError,
+  tbGenerateDomHelper,
+  tbGetBorderRadius,
+  tbGetScreenRatios,
+  tbGetZIndex,
+  tbSuccess,
+  tbUpdateObjects
+} from './helpers';
+import { TBStream } from './stream';
+
 export class TBPublisher {
   constructor(targetElement, properties, completionHandler) {
     if (!targetElement) {
-      this.domId = TBGenerateDomHelper();
+      this.domId = tbGenerateDomHelper();
       this.element = document.getElementById(this.domId);
     } else if (typeof targetElement === 'string') {
       this.domId = targetElement;
@@ -21,9 +33,9 @@ export class TBPublisher {
     let publishAudio = 'true';
     let publishVideo = 'true';
     let cameraName = 'front';
-    const zIndex = TBGetZIndex(this.element);
-    const ratios = TBGetScreenRatios();
-    const borderRadius = TBGetBorderRadius(this.element);
+    const zIndex = tbGetZIndex(this.element);
+    const ratios = tbGetScreenRatios();
+    const borderRadius = tbGetBorderRadius(this.element);
     let height;
     let width;
     if (this.properties) {
@@ -44,19 +56,19 @@ export class TBPublisher {
     }
     const obj = replaceWithVideoStream(this.domId, PublisherStreamId, { width, height });
     position = getPosition(obj.id);
-    TBUpdateObjects();
+    tbUpdateObjects();
     OT.getHelper().eventing(this);
     const onSuccess = (result) => {
       if (completionHandler) {
         completionHandler();
       }
-      return TBSuccess(result);
+      return tbSuccess(result);
     };
     const onError = (result) => {
       if (completionHandler) {
         completionHandler(result);
       }
-      return TBError(result);
+      return tbError(result);
     };
     const initPublisherParams = [
       name,
@@ -73,7 +85,7 @@ export class TBPublisher {
       borderRadius
     ];
     Cordova.exec(onSuccess, onError, OTPlugin, 'initPublisher', initPublisherParams);
-    Cordova.exec(this.eventReceived, TBSuccess, OTPlugin, 'addEvent', ['publisherEvents']);
+    Cordova.exec(this.eventReceived, tbSuccess, OTPlugin, 'addEvent', ['publisherEvents']);
   }
 
   setSession(session) {
@@ -113,10 +125,10 @@ export class TBPublisher {
   destroy() {
     const onSuccess = (result) => {
       this.removePublisherElement();
-      return TBSuccess(result);
+      return tbSuccess(result);
     };
     if (this.element) {
-      Cordova.exec(onSuccess, TBError, OTPlugin, 'destroyPublisher', []);
+      Cordova.exec(onSuccess, tbError, OTPlugin, 'destroyPublisher', []);
     }
   }
 
@@ -140,7 +152,7 @@ export class TBPublisher {
 
   setCameraPosition(cameraPosition) {
     pdebug('setting camera position', { cameraPosition });
-    Cordova.exec(TBSuccess, TBError, OTPlugin, 'setCameraPosition', [cameraPosition]);
+    Cordova.exec(tbSuccess, tbError, OTPlugin, 'setCameraPosition', [cameraPosition]);
     return this;
   }
 
@@ -157,6 +169,6 @@ export class TBPublisher {
       publishState = 'false';
     }
     pdebug('setting publishstate', { media, publishState });
-    Cordova.exec(TBSuccess, TBError, OTPlugin, media, [publishState]);
+    Cordova.exec(tbSuccess, tbError, OTPlugin, media, [publishState]);
   }
 }

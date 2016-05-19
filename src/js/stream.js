@@ -1,5 +1,6 @@
 export class TBStream {
-  constructor( prop, @connection ) {
+  constructor(prop, connection) {
+    this.connection = connection;
     for (const key of Object.keys(prop)) {
       this[key] = prop[key];
     }

@@ -1,7 +1,20 @@
-/* global
- *   Cordova, OT, OTError, OTPlugin, pdebug, streamElements, TB, TBConnection, TBError, TBEvent,
- *   TBGenerateDomHelper, TBStream, TBStreamConnection, TBSubscriber, TBSuccess, TBUpdateObjects
- */
+/* global Cordova, OT, TB, TBStream, TBStreamConnection */
+import { TBConnection } from './connection';
+import {
+  OTPlugin
+} from './constants';
+import { OTError } from './error';
+import { TBEvent } from './event';
+import {
+  pdebug,
+  streamElements,
+  tbError,
+  tbGenerateDomHelper,
+  tbSuccess,
+  tbUpdateObjects
+} from './helpers';
+import { TBStream } from './stream';
+import { TBSubscriber } from './subscriber';
 
 export class TBSession {
   constructor(apiKey, sessionId) {
@@ -19,7 +32,7 @@ export class TBSession {
     this.streams = {};
     this.alreadyPublishing = false;
     OT.getHelper().eventing(this);
-    Cordova.exec(TBSuccess, TBSuccess, OTPlugin, 'initSession', [this.apiKey, this.sessionId]);
+    Cordova.exec(tbSuccess, tbSuccess, OTPlugin, 'initSession', [this.apiKey, this.sessionId]);
   }
 
   connect(token, connectCompletionCallback) {
@@ -31,13 +44,13 @@ export class TBSession {
     if (connectCompletionCallback) {
       this.on('sessionConnected', connectCompletionCallback);
     }
-    Cordova.exec(this.eventReceived, TBError, OTPlugin, 'addEvent', ['sessionEvents']);
-    Cordova.exec(TBSuccess, TBError, OTPlugin, 'connect', [this.token]);
+    Cordova.exec(this.eventReceived, tbError, OTPlugin, 'addEvent', ['sessionEvents']);
+    Cordova.exec(tbSuccess, tbError, OTPlugin, 'connect', [this.token]);
     return;
   }
 
   disconnect() {
-    Cordova.exec(TBSuccess, TBError, OTPlugin, 'disconnect', []);
+    Cordova.exec(tbSuccess, tbError, OTPlugin, 'disconnect', []);
   }
 
   forceDisconnect(/* connection */) {
@@ -68,13 +81,13 @@ export class TBSession {
       if (completionHandler) {
         completionHandler();
       }
-      TBSuccess(result);
+      tbSuccess(result);
     };
     const onError = (result) => {
       if (completionHandler) {
         completionHandler(result);
       }
-      TBError(result);
+      tbError(result);
     };
     Cordova.exec(onSuccess, onError, OTPlugin, 'publish', []);
     return publisher;
@@ -86,7 +99,7 @@ export class TBSession {
     const data = signal.data ? signal.data : '';
     let to = signal.to ? signal.to : '';
     to = typeof to === 'string' ? to : to.connectionId;
-    Cordova.exec(TBSuccess, TBError, OTPlugin, 'signal', [type, data, to]);
+    Cordova.exec(tbSuccess, tbError, OTPlugin, 'signal', [type, data, to]);
     return this;
   }
 
@@ -94,7 +107,7 @@ export class TBSession {
     this.subscriberCallbacks = {};
     if (four) {
       // stream,domId, properties, completionHandler
-      const domId = two || TBGenerateDomHelper();
+      const domId = two || tbGenerateDomHelper();
       const subscriber = new TBSubscriber(one, domId, three);
       this.subscriberCallbacks[one.streamId] = four;
       return subscriber;
@@ -118,7 +131,7 @@ export class TBSession {
       if (typeof two === 'object' && typeof three === 'function') {
         console.log('stream, props, completionHandler');
         this.subscriberCallbacks[one.streamId] = three;
-        const domId = TBGenerateDomHelper();
+        const domId = tbGenerateDomHelper();
         const subscriber = new TBSubscriber(one, domId, two);
         return subscriber;
       }
@@ -130,19 +143,19 @@ export class TBSession {
         return subscriber;
       }
       if (typeof two === 'object') {
-        const domId = TBGenerateDomHelper();
+        const domId = tbGenerateDomHelper();
         const subscriber = new TBSubscriber(one, domId, two);
         return subscriber;
       }
       if (typeof two === 'function') {
         this.subscriberCallbacks[one.streamId] = two;
-        const domId = TBGenerateDomHelper();
+        const domId = tbGenerateDomHelper();
         const subscriber = new TBSubscriber(one, domId, {});
         return subscriber;
       }
     }
     // stream
-    const domId = TBGenerateDomHelper();
+    const domId = tbGenerateDomHelper();
     const subscriber = new TBSubscriber(one, domId, {});
     return subscriber;
   }
@@ -160,15 +173,15 @@ export class TBSession {
       if (element.parentNode) {
         element.parentNode.removeChild(element);
       }
-      TBUpdateObjects();
+      tbUpdateObjects();
     }
     const onSuccess = (result) => {
       publisher.destroy();
-      TBSuccess(result);
+      tbSuccess(result);
     };
     const onError = (result) => {
       publisher.destroy();
-      TBError(result);
+      tbError(result);
     };
     return Cordova.exec(onSuccess, onError, OTPlugin, 'unpublish', []);
   }
@@ -183,9 +196,9 @@ export class TBSession {
         element.parentNode.removeChild(element);
       }
       delete streamElements[streamId];
-      TBUpdateObjects();
+      tbUpdateObjects();
     }
-    return Cordova.exec(TBSuccess, TBError, OTPlugin, 'unsubscribe', [streamId]);
+    return Cordova.exec(tbSuccess, tbError, OTPlugin, 'unsubscribe', [streamId]);
   }
 
   cleanUpDom() {
@@ -263,7 +276,7 @@ export class TBSession {
           element.parentNode.removeChild(element);
         }
         delete streamElements[stream.streamId];
-        TBUpdateObjects();
+        tbUpdateObjects();
       }
       delete(this.streams[stream.streamId]);
     }

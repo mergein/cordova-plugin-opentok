@@ -15,7 +15,8 @@ StringSplitter = "$2#9$";
 DefaultWidth = 264;
 
 DefaultHeight = 198;
-;/**
+;/* eslint-disable */
+/**
  * @license  Common JS Helpers on OpenTok 0.2.0 1f056b9 master
  * http://www.tokbox.com/
  *
@@ -2665,55 +2666,18 @@ babelHelpers.createClass = function () {
 
 babelHelpers;
 
-var OTPlugin$1 = 'OpenTokPlugin';
+var OTPlugin = 'OpenTokPlugin';
+var PublisherStreamId = 'TBPublisher';
+var PublisherTypeClass = 'OT_publisher';
+var SubscriberTypeClass = 'OT_subscriber';
+var VideoContainerClass = 'OT_video-container';
+var DefaultWidth = 264;
+var DefaultHeight = 198;
 
-var codesToTitle = {
-  1004: 'OTAuthorizationFailure',
-  1005: 'OTErrorInvalidSession',
-  1006: 'OTConnectionFailed    ',
-  1011: 'OTNullOrInvalidParameter',
-  // 1010: 'OTNotConnected ',
-  1015: 'OTSessionIllegalState ',
-  1503: 'OTNoMessagingServer    ',
-  1023: 'OTConnectionRefused    ',
-  1020: 'OTSessionStateFailed   ',
-  1403: 'OTP2PSessionMaxParticipants',
-  1021: 'OTSessionConnectionTimeout ',
-  // 2000: 'OTSessionInternalError  ',
-  1461: 'OTSessionInvalidSignalType',
-  1413: 'OTSessionSignalDataTooLong',
-  1022: 'OTConnectionDropped',
-  1112: 'OTSessionSubscriberNotFound',
-  1113: 'OTSessionPublisherNotFound',
-  // 0: 'OTPublisherSuccess',
-  1010: 'OTSessionDisconnected',
-  // 2000: 'OTPublisherInternalError',
-  1610: 'OTPublisherWebRTCError',
-  0: 'OTSubscriberSuccess$',
-  1542: 'OTConnectionTimedOut',
-  1541: 'OTSubscriberSessionDisconnected',
-  1600: 'OTSubscriberWebRTCError',
-  1604: 'OTSubscriberServerCannotFindStream',
-  2000: 'OTSubscriberInternalError'
-};
-
-var OTError$1 = function OTError(errCode, errMsg) {
-  babelHelpers.classCallCheck(this, OTError);
-
-  this.code = errCode;
-  if (errMsg) {
-    this.message = errMsg;
-  } else if (codesToTitle[errCode]) {
-    this.message = codesToTitle[errCode];
-  } else {
-    this.message = 'OpenTok Error';
-  }
-};
-
-// keep track of DOM elements for each stream
+var streamElements = {}; // keep track of DOM elements for each stream
 
 // Whenever updateViews are involved, parameters passed through will always have:
-// TBPublisher constructor, TBUpdateObjects, TBSubscriber constructor
+// TBPublisher constructor, tbUpdateObjects, TBSubscriber constructor
 // [id, top, left, width, height, zIndex, ... ]
 
 //
@@ -2750,7 +2714,36 @@ var getPosition$1 = function getPosition(divName) {
   };
 };
 
-var TBError$1 = function TBError(error) {
+var replaceWithVideoStream$1 = function replaceWithVideoStream(divName, streamId, properties) {
+  var typeClass = streamId === PublisherStreamId ? PublisherTypeClass : SubscriberTypeClass;
+  var element = document.getElementById(divName);
+  element.setAttribute('class', 'OT_root ' + typeClass);
+  element.setAttribute('data-streamid', streamId);
+  element.style.width = properties.width + 'px';
+  element.style.height = properties.height + 'px';
+  element.style.overflow = 'hidden';
+  element.style['background-color'] = '#000000';
+  streamElements[streamId] = element;
+
+  var internalDiv = document.createElement('div');
+  internalDiv.setAttribute('class', VideoContainerClass);
+  internalDiv.style.width = '100%';
+  internalDiv.style.height = '100%';
+  internalDiv.style.left = '0px';
+  internalDiv.style.top = '0px';
+
+  var videoElement = document.createElement('video');
+  videoElement.style.width = '100%';
+  videoElement.style.height = '100%';
+  // TODO:
+  //   js change styles or append css stylesheets? Concern: users will not be able to change via css
+
+  internalDiv.appendChild(videoElement);
+  element.appendChild(internalDiv);
+  return element;
+};
+
+var tbError = function tbError(error) {
   if (window.OT.errorCallback) {
     window.OT.errorCallback(error);
   } else {
@@ -2758,15 +2751,52 @@ var TBError$1 = function TBError(error) {
   }
 };
 
-var TBSuccess$1 = function TBSuccess() {
+var tbSuccess$1 = function tbSuccess() {
   // console.log('success');
 };
 
-var TBUpdateObjects$1 = function TBUpdateObjects() {
-  // console.log('JS: Objects being updated in TBUpdateObjects')
+var tbGetZIndex$1 = function tbGetZIndex(element) {
+  var ele = element;
+  while (ele) {
+    var val = document.defaultView.getComputedStyle(ele, null).getPropertyValue('z-index');
+    // console.log val
+    if (parseInt(val, 10)) {
+      return val;
+    }
+    ele = ele.offsetParent;
+  }
+  return 0;
+};
+
+// Ratio between browser window size and viewport size
+var tbGetScreenRatios$1 = function tbGetScreenRatios() {
+  return {
+    widthRatio: window.outerWidth / window.innerWidth,
+    heightRatio: window.outerHeight / window.innerHeight
+  };
+};
+
+var tbGetBorderRadius$1 = function tbGetBorderRadius(element) {
+  var ele = element;
+  while (ele) {
+    var val = document.defaultView.getComputedStyle(ele, null).getPropertyValue('border-radius');
+    if (val && val.length > 1 && val !== '0px') {
+      if (val.indexOf('%') === val.length - 1) {
+        return Math.round(ele.offsetWidth * (parseFloat(val.substring(0, val.length - 1)) / 100));
+      } else if (val.indexOf('px') === val.length - 2) {
+        return parseInt(val.substring(0, val.length - 2), 10);
+      }
+    }
+    ele = ele.offsetParent;
+  }
+  return 0;
+};
+
+var tbUpdateObjects = function tbUpdateObjects() {
+  // console.log('JS: Objects being updated in tbUpdateObjects')
   var objects = document.getElementsByClassName('OT_root');
 
-  var ratios = TBGetScreenRatios$1();
+  var ratios = tbGetScreenRatios$1();
 
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
@@ -2781,8 +2811,8 @@ var TBUpdateObjects$1 = function TBUpdateObjects() {
       // console.log('JS sessionId: ' + streamId )
       var id = e.id;
       var position = getPosition$1(id);
-      var cordovaParams = [streamId, position.top, position.left, position.width, position.height, TBGetZIndex$1(e), ratios.widthRatio, ratios.heightRatio, TBGetBorderRadius$1(e)];
-      Cordova.exec(TBSuccess$1, TBError$1, OTPlugin$1, 'updateView', cordovaParams);
+      var cordovaParams = [streamId, position.top, position.left, position.width, position.height, tbGetZIndex$1(e), ratios.widthRatio, ratios.heightRatio, tbGetBorderRadius$1(e)];
+      Cordova.exec(tbSuccess$1, tbError, OTPlugin, 'updateView', cordovaParams);
     }
   } catch (err) {
     _didIteratorError = true;
@@ -2802,58 +2832,102 @@ var TBUpdateObjects$1 = function TBUpdateObjects() {
   return;
 };
 
-var TBGetZIndex$1 = function TBGetZIndex(element) {
-  var ele = element;
-  while (ele) {
-    var val = document.defaultView.getComputedStyle(ele, null).getPropertyValue('z-index');
-    // console.log val
-    if (parseInt(val, 10)) {
-      return val;
-    }
-    ele = ele.offsetParent;
-  }
-  return 0;
-};
-
-// Ratio between browser window size and viewport size
-var TBGetScreenRatios$1 = function TBGetScreenRatios() {
-  return {
-    widthRatio: window.outerWidth / window.innerWidth,
-    heightRatio: window.outerHeight / window.innerHeight
-  };
-};
-
-var TBGetBorderRadius$1 = function TBGetBorderRadius(element) {
-  var ele = element;
-  while (ele) {
-    var val = document.defaultView.getComputedStyle(ele, null).getPropertyValue('border-radius');
-    if (val && val.length > 1 && val !== '0px') {
-      if (val.indexOf('%') === val.length - 1) {
-        return Math.round(ele.offsetWidth * (parseFloat(val.substring(0, val.length - 1)) / 100));
-      } else if (val.indexOf('px') === val.length - 2) {
-        return parseInt(val.substring(0, val.length - 2), 10);
-      }
-    }
-    ele = ele.offsetParent;
-  }
-  return 0;
+var tbGenerateDomHelper = function tbGenerateDomHelper() {
+  var domId = 'PubSub ' + Date.now();
+  var div = document.createElement('div');
+  div.setAttribute('id', domId);
+  document.body.appendChild(div);
+  return domId;
 };
 
 var pdebug$1 = function pdebug(msg, data) {
   console.log('JS Lib: #{msg} - ', data);
 };
 
-/* global
- *   Cordova, DefaultHeight, DefaultWidth, getPosition, OT, OTPlugin, pdebug, PublisherStreamId,
- *   replaceWithVideoStream, TBError, TBEvent, TBGenerateDomHelper, TBGetBorderRadius,
- *   TBGetScreenRatios, TBGetZIndex, TBStream, TBSuccess, TBUpdateObjects
- */
+var TBEvent = function () {
+  function TBEvent(prop) {
+    babelHelpers.classCallCheck(this, TBEvent);
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = Object.keys(prop)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var key = _step.value;
+
+        this[key] = prop[key];
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator.return) {
+          _iterator.return();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
+
+    this.defaultPrevented = false;
+  }
+
+  babelHelpers.createClass(TBEvent, [{
+    key: "isDefaultPrevented",
+    value: function isDefaultPrevented() {
+      return this.defaultValue;
+    }
+  }, {
+    key: "preventDefault",
+    value: function preventDefault() {
+      // todo: implement preventDefault
+      return;
+    }
+  }]);
+  return TBEvent;
+}();
+
+var TBStream = function TBStream(prop, connection) {
+  babelHelpers.classCallCheck(this, TBStream);
+
+  this.connection = connection;
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = Object.keys(prop)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var key = _step.value;
+
+      this[key] = prop[key];
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  this.videoDimensions = { width: 0, height: 0 };
+};
+
 var TBPublisher = function () {
   function TBPublisher(targetElement, properties, completionHandler) {
     babelHelpers.classCallCheck(this, TBPublisher);
 
     if (!targetElement) {
-      this.domId = TBGenerateDomHelper();
+      this.domId = tbGenerateDomHelper();
       this.element = document.getElementById(this.domId);
     } else if (typeof targetElement === 'string') {
       this.domId = targetElement;
@@ -2862,15 +2936,15 @@ var TBPublisher = function () {
       this.element = targetElement;
       this.domId = targetElement.id;
     }
-    pdebug('creating publisher', {});
-    var position = getPosition(this.domId);
+    pdebug$1('creating publisher', {});
+    var position = getPosition$1(this.domId);
     var name = '';
     var publishAudio = 'true';
     var publishVideo = 'true';
     var cameraName = 'front';
-    var zIndex = TBGetZIndex(this.element);
-    var ratios = TBGetScreenRatios();
-    var borderRadius = TBGetBorderRadius(this.element);
+    var zIndex = tbGetZIndex$1(this.element);
+    var ratios = tbGetScreenRatios$1();
+    var borderRadius = tbGetBorderRadius$1(this.element);
     var height = void 0;
     var width = void 0;
     if (this.properties) {
@@ -2889,25 +2963,25 @@ var TBPublisher = function () {
       width = DefaultWidth;
       height = DefaultHeight;
     }
-    var obj = replaceWithVideoStream(this.domId, PublisherStreamId, { width: width, height: height });
-    position = getPosition(obj.id);
-    TBUpdateObjects();
+    var obj = replaceWithVideoStream$1(this.domId, PublisherStreamId, { width: width, height: height });
+    position = getPosition$1(obj.id);
+    tbUpdateObjects();
     OT.getHelper().eventing(this);
     var onSuccess = function onSuccess(result) {
       if (completionHandler) {
         completionHandler();
       }
-      return TBSuccess(result);
+      return tbSuccess$1(result);
     };
     var onError = function onError(result) {
       if (completionHandler) {
         completionHandler(result);
       }
-      return TBError(result);
+      return tbError(result);
     };
     var initPublisherParams = [name, position.top, position.left, width, height, zIndex, publishAudio, publishVideo, cameraName, ratios.widthRatio, ratios.heightRatio, borderRadius];
     Cordova.exec(onSuccess, onError, OTPlugin, 'initPublisher', initPublisherParams);
-    Cordova.exec(this.eventReceived, TBSuccess, OTPlugin, 'addEvent', ['publisherEvents']);
+    Cordova.exec(this.eventReceived, tbSuccess$1, OTPlugin, 'addEvent', ['publisherEvents']);
   }
 
   babelHelpers.createClass(TBPublisher, [{
@@ -2918,15 +2992,15 @@ var TBPublisher = function () {
   }, {
     key: 'eventReceived',
     value: function eventReceived(response) {
-      pdebug('publisher event received', response);
+      pdebug$1('publisher event received', response);
       return this[response.eventType](response.data);
     }
   }, {
     key: 'streamCreated',
     value: function streamCreated(event) {
-      pdebug('publisher streamCreatedHandler', event);
-      pdebug('publisher streamCreatedHandler', this.session);
-      pdebug('publisher streamCreatedHandler', this.session.sessionConnection);
+      pdebug$1('publisher streamCreatedHandler', event);
+      pdebug$1('publisher streamCreatedHandler', this.session);
+      pdebug$1('publisher streamCreatedHandler', this.session.sessionConnection);
       this.stream = new TBStream(event.stream, this.session.sessionConnection);
       var streamEvent = new TBEvent({ stream: this.stream });
       this.trigger('streamCreated', streamEvent);
@@ -2935,7 +3009,7 @@ var TBPublisher = function () {
   }, {
     key: 'streamDestroyed',
     value: function streamDestroyed(event) {
-      pdebug('publisher streamDestroyed event', event);
+      pdebug$1('publisher streamDestroyed event', event);
       var streamEvent = new TBEvent({ stream: this.stream, reason: 'clientDisconnected' });
       this.trigger('streamDestroyed', streamEvent);
       // remove stream DOM?
@@ -2956,10 +3030,10 @@ var TBPublisher = function () {
 
       var onSuccess = function onSuccess(result) {
         _this.removePublisherElement();
-        return TBSuccess(result);
+        return tbSuccess$1(result);
       };
       if (this.element) {
-        Cordova.exec(onSuccess, TBError, OTPlugin, 'destroyPublisher', []);
+        Cordova.exec(onSuccess, tbError, OTPlugin, 'destroyPublisher', []);
       }
     }
   }, {
@@ -2987,8 +3061,8 @@ var TBPublisher = function () {
   }, {
     key: 'setCameraPosition',
     value: function setCameraPosition(cameraPosition) {
-      pdebug('setting camera position', { cameraPosition: cameraPosition });
-      Cordova.exec(TBSuccess, TBError, OTPlugin, 'setCameraPosition', [cameraPosition]);
+      pdebug$1('setting camera position', { cameraPosition: cameraPosition });
+      Cordova.exec(tbSuccess$1, tbError, OTPlugin, 'setCameraPosition', [cameraPosition]);
       return this;
     }
   }, {
@@ -3006,17 +3080,186 @@ var TBPublisher = function () {
       if (!state || state === 'false') {
         publishState = 'false';
       }
-      pdebug('setting publishstate', { media: media, publishState: publishState });
-      Cordova.exec(TBSuccess, TBError, OTPlugin, media, [publishState]);
+      pdebug$1('setting publishstate', { media: media, publishState: publishState });
+      Cordova.exec(tbSuccess$1, tbError, OTPlugin, media, [publishState]);
     }
   }]);
   return TBPublisher;
 }();
 
-/* global
- *   Cordova, OT, OTError, OTPlugin, pdebug, streamElements, TB, TBConnection, TBError, TBEvent,
- *   TBGenerateDomHelper, TBStream, TBStreamConnection, TBSubscriber, TBSuccess, TBUpdateObjects
- */
+var TBConnection = function () {
+  function TBConnection(prop) {
+    babelHelpers.classCallCheck(this, TBConnection);
+
+    this.connectionId = prop.connectionId;
+    this.creationTime = prop.creationTime;
+    this.data = prop.data;
+  }
+
+  babelHelpers.createClass(TBConnection, [{
+    key: "toJSON",
+    value: function toJSON() {
+      return {
+        connectionId: this.connectionId,
+        creationTime: this.creationTime,
+        data: this.data
+      };
+    }
+  }]);
+  return TBConnection;
+}();
+
+var codesToTitle = {
+  1004: 'OTAuthorizationFailure',
+  1005: 'OTErrorInvalidSession',
+  1006: 'OTConnectionFailed    ',
+  1011: 'OTNullOrInvalidParameter',
+  // 1010: 'OTNotConnected ',
+  1015: 'OTSessionIllegalState ',
+  1503: 'OTNoMessagingServer    ',
+  1023: 'OTConnectionRefused    ',
+  1020: 'OTSessionStateFailed   ',
+  1403: 'OTP2PSessionMaxParticipants',
+  1021: 'OTSessionConnectionTimeout ',
+  // 2000: 'OTSessionInternalError  ',
+  1461: 'OTSessionInvalidSignalType',
+  1413: 'OTSessionSignalDataTooLong',
+  1022: 'OTConnectionDropped',
+  1112: 'OTSessionSubscriberNotFound',
+  1113: 'OTSessionPublisherNotFound',
+  // 0: 'OTPublisherSuccess',
+  1010: 'OTSessionDisconnected',
+  // 2000: 'OTPublisherInternalError',
+  1610: 'OTPublisherWebRTCError',
+  0: 'OTSubscriberSuccess$',
+  1542: 'OTConnectionTimedOut',
+  1541: 'OTSubscriberSessionDisconnected',
+  1600: 'OTSubscriberWebRTCError',
+  1604: 'OTSubscriberServerCannotFindStream',
+  2000: 'OTSubscriberInternalError'
+};
+
+var OTError = function OTError(errCode, errMsg) {
+  babelHelpers.classCallCheck(this, OTError);
+
+  this.code = errCode;
+  if (errMsg) {
+    this.message = errMsg;
+  } else if (codesToTitle[errCode]) {
+    this.message = codesToTitle[errCode];
+  } else {
+    this.message = 'OpenTok Error';
+  }
+};
+
+var TBSubscriber = function () {
+  function TBSubscriber(stream, divName, props) {
+    babelHelpers.classCallCheck(this, TBSubscriber);
+
+    var properties = props;
+    var element = document.getElementById(divName);
+    this.id = divName;
+    this.element = element;
+    pdebug('creating subscriber', properties);
+    this.streamId = stream.streamId;
+
+    if (properties && properties.width === '100%' && properties.height === '100%') {
+      element.style.width = '100%';
+      element.style.height = '100%';
+      properties.width = '';
+      properties.height = '';
+    }
+    var divPosition = getPosition(divName);
+    var subscribeToVideo = 'true';
+    var zIndex = tbGetZIndex(element);
+    var width = void 0;
+    var height = void 0;
+    // let name;
+    var subscribeToAudio = void 0;
+
+    if (properties) {
+      width = properties.width || divPosition.width;
+      height = properties.height || divPosition.height;
+      // name = properties.name || '';
+      subscribeToVideo = 'true';
+      subscribeToAudio = 'true';
+      if (properties.subscribeToVideo && properties.subscribeToVideo === false) {
+        subscribeToVideo = 'false';
+      }
+      if (properties.subscribeToAudio && properties.subscribeToAudio === false) {
+        subscribeToAudio = 'false';
+      }
+    }
+    if (!width || !height) {
+      width = DefaultWidth;
+      height = DefaultHeight;
+    }
+    var obj = replaceWithVideoStream(divName, stream.streamId, { width: width, height: height });
+    var position = getPosition(obj.id);
+    var ratios = tbGetScreenRatios();
+    var borderRadius = tbGetBorderRadius(element);
+    pdebug('final subscriber position', position);
+    var cordovaParams = [stream.streamId, position.top, position.left, width, height, zIndex, subscribeToAudio, subscribeToVideo, ratios.widthRatio, ratios.heightRatio, borderRadius];
+    Cordova.exec(tbSuccess, TBError, OTPlugin, 'subscribe', cordovaParams);
+  }
+
+  babelHelpers.createClass(TBSubscriber, [{
+    key: 'getAudioVolume',
+    value: function getAudioVolume() {
+      return 0;
+    }
+  }, {
+    key: 'getImgData',
+    value: function getImgData() {
+      return '';
+    }
+  }, {
+    key: 'getStyle',
+    value: function getStyle() {
+      return {};
+    }
+  }, {
+    key: 'off',
+    value: function off() /* event, handler */{
+      return this;
+    }
+  }, {
+    key: 'on',
+    value: function on() /* event, handler */{
+      // todo - videoDisabled
+      return this;
+    }
+  }, {
+    key: 'setAudioVolume',
+    value: function setAudioVolume() /* value */{
+      return this;
+    }
+  }, {
+    key: 'setStyle',
+    value: function setStyle() /* style, value */{
+      return this;
+    }
+  }, {
+    key: 'subscribeToAudio',
+    value: function subscribeToAudio() /* value */{
+      return this;
+    }
+  }, {
+    key: 'subscribeToVideo',
+    value: function subscribeToVideo() /* value */{
+      return this;
+    }
+
+    // deprecating
+
+  }, {
+    key: 'removeEventListener',
+    value: function removeEventListener() /* event, listener */{
+      return this;
+    }
+  }]);
+  return TBSubscriber;
+}();
 
 var TBSession = function () {
   function TBSession(apiKey, sessionId) {
@@ -3036,7 +3279,7 @@ var TBSession = function () {
     this.streams = {};
     this.alreadyPublishing = false;
     OT.getHelper().eventing(this);
-    Cordova.exec(TBSuccess, TBSuccess, OTPlugin, 'initSession', [this.apiKey, this.sessionId]);
+    Cordova.exec(tbSuccess$1, tbSuccess$1, OTPlugin, 'initSession', [this.apiKey, this.sessionId]);
   }
 
   babelHelpers.createClass(TBSession, [{
@@ -3050,14 +3293,14 @@ var TBSession = function () {
       if (connectCompletionCallback) {
         this.on('sessionConnected', connectCompletionCallback);
       }
-      Cordova.exec(this.eventReceived, TBError, OTPlugin, 'addEvent', ['sessionEvents']);
-      Cordova.exec(TBSuccess, TBError, OTPlugin, 'connect', [this.token]);
+      Cordova.exec(this.eventReceived, tbError, OTPlugin, 'addEvent', ['sessionEvents']);
+      Cordova.exec(tbSuccess$1, tbError, OTPlugin, 'connect', [this.token]);
       return;
     }
   }, {
     key: 'disconnect',
     value: function disconnect() {
-      Cordova.exec(TBSuccess, TBError, OTPlugin, 'disconnect', []);
+      Cordova.exec(tbSuccess$1, tbError, OTPlugin, 'disconnect', []);
     }
   }, {
     key: 'forceDisconnect',
@@ -3083,7 +3326,7 @@ var TBSession = function () {
     key: 'publish',
     value: function publish(publisher, completionHandler) {
       if (this.alreadyPublishing) {
-        pdebug('Session is already publishing', {});
+        pdebug$1('Session is already publishing', {});
         return publisher;
       }
       this.alreadyPublishing = true;
@@ -3093,13 +3336,13 @@ var TBSession = function () {
         if (completionHandler) {
           completionHandler();
         }
-        TBSuccess(result);
+        tbSuccess$1(result);
       };
       var onError = function onError(result) {
         if (completionHandler) {
           completionHandler(result);
         }
-        TBError(result);
+        tbError(result);
       };
       Cordova.exec(onSuccess, onError, OTPlugin, 'publish', []);
       return publisher;
@@ -3112,7 +3355,7 @@ var TBSession = function () {
       var data = _signal.data ? _signal.data : '';
       var to = _signal.to ? _signal.to : '';
       to = typeof to === 'string' ? to : to.connectionId;
-      Cordova.exec(TBSuccess, TBError, OTPlugin, 'signal', [type, data, to]);
+      Cordova.exec(tbSuccess$1, tbError, OTPlugin, 'signal', [type, data, to]);
       return this;
     }
   }, {
@@ -3121,7 +3364,7 @@ var TBSession = function () {
       this.subscriberCallbacks = {};
       if (four) {
         // stream,domId, properties, completionHandler
-        var _domId = two || TBGenerateDomHelper();
+        var _domId = two || tbGenerateDomHelper();
         var _subscriber = new TBSubscriber(one, _domId, three);
         this.subscriberCallbacks[one.streamId] = four;
         return _subscriber;
@@ -3145,7 +3388,7 @@ var TBSession = function () {
         if ((typeof two === 'undefined' ? 'undefined' : babelHelpers.typeof(two)) === 'object' && typeof three === 'function') {
           console.log('stream, props, completionHandler');
           this.subscriberCallbacks[one.streamId] = three;
-          var _domId3 = TBGenerateDomHelper();
+          var _domId3 = tbGenerateDomHelper();
           var _subscriber4 = new TBSubscriber(one, _domId3, two);
           return _subscriber4;
         }
@@ -3157,19 +3400,19 @@ var TBSession = function () {
           return _subscriber5;
         }
         if ((typeof two === 'undefined' ? 'undefined' : babelHelpers.typeof(two)) === 'object') {
-          var _domId4 = TBGenerateDomHelper();
+          var _domId4 = tbGenerateDomHelper();
           var _subscriber6 = new TBSubscriber(one, _domId4, two);
           return _subscriber6;
         }
         if (typeof two === 'function') {
           this.subscriberCallbacks[one.streamId] = two;
-          var _domId5 = TBGenerateDomHelper();
+          var _domId5 = tbGenerateDomHelper();
           var _subscriber7 = new TBSubscriber(one, _domId5, {});
           return _subscriber7;
         }
       }
       // stream
-      var domId = TBGenerateDomHelper();
+      var domId = tbGenerateDomHelper();
       var subscriber = new TBSubscriber(one, domId, {});
       return subscriber;
     }
@@ -3177,7 +3420,7 @@ var TBSession = function () {
     key: 'unpublish',
     value: function unpublish(publisher) {
       if (publisher !== this.publisher) {
-        pdebug('Wrong publisher specified', {});
+        pdebug$1('Wrong publisher specified', {});
         return null;
       }
       this.alreadyPublishing = false;
@@ -3188,15 +3431,15 @@ var TBSession = function () {
         if (element.parentNode) {
           element.parentNode.removeChild(element);
         }
-        TBUpdateObjects();
+        tbUpdateObjects();
       }
       var onSuccess = function onSuccess(result) {
         publisher.destroy();
-        TBSuccess(result);
+        tbSuccess$1(result);
       };
       var onError = function onError(result) {
         publisher.destroy();
-        TBError(result);
+        tbError(result);
       };
       return Cordova.exec(onSuccess, onError, OTPlugin, 'unpublish', []);
     }
@@ -3212,9 +3455,9 @@ var TBSession = function () {
           element.parentNode.removeChild(element);
         }
         delete streamElements[streamId];
-        TBUpdateObjects();
+        tbUpdateObjects();
       }
-      return Cordova.exec(TBSuccess, TBError, OTPlugin, 'unsubscribe', [streamId]);
+      return Cordova.exec(tbSuccess$1, tbError, OTPlugin, 'unsubscribe', [streamId]);
     }
   }, {
     key: 'cleanUpDom',
@@ -3236,7 +3479,7 @@ var TBSession = function () {
   }, {
     key: 'eventReceived',
     value: function eventReceived(response) {
-      pdebug('session event received', response);
+      pdebug$1('session event received', response);
       return this[response.eventType](response.data);
     }
   }, {
@@ -3251,7 +3494,7 @@ var TBSession = function () {
   }, {
     key: 'connectionDestroyed',
     value: function connectionDestroyed(event) {
-      pdebug('connectionDestroyedHandler', event);
+      pdebug$1('connectionDestroyedHandler', event);
       var connection = this.connections[event.connection.connectionId];
       var connectionEvent = new TBEvent({ connection: connection, reason: 'clientDisconnected' });
       this.trigger('connectionDestroyed', connectionEvent);
@@ -3261,7 +3504,7 @@ var TBSession = function () {
   }, {
     key: 'sessionConnected',
     value: function sessionConnected(event) {
-      pdebug('sessionConnectedHandler', event);
+      pdebug$1('sessionConnectedHandler', event);
       this.trigger('sessionConnected');
       this.connection = new TBConnection(event.connection);
       this.connections[event.connection.connectionId] = this.connection;
@@ -3270,7 +3513,7 @@ var TBSession = function () {
   }, {
     key: 'sessionDisconnected',
     value: function sessionDisconnected(event) {
-      pdebug('sessionDisconnected event', event);
+      pdebug$1('sessionDisconnected event', event);
       this.alreadyPublishing = false;
       var sessionDisconnectedEvent = new TBEvent({ reason: event.reason });
       this.trigger('sessionDisconnected', sessionDisconnectedEvent);
@@ -3280,7 +3523,7 @@ var TBSession = function () {
   }, {
     key: 'streamCreated',
     value: function streamCreated(event) {
-      pdebug('streamCreatedHandler', event);
+      pdebug$1('streamCreatedHandler', event);
       var stream = new TBStream(event.stream, this.connections[event.stream.connectionId]);
       this.streams[stream.streamId] = stream;
       var streamEvent = new TBEvent({ stream: stream });
@@ -3290,7 +3533,7 @@ var TBSession = function () {
   }, {
     key: 'streamDestroyed',
     value: function streamDestroyed(event) {
-      pdebug('streamDestroyed event', event);
+      pdebug$1('streamDestroyed event', event);
       var stream = this.streams[event.stream.streamId];
       var streamEvent = new TBEvent({ stream: stream, reason: 'clientDisconnected' });
       this.trigger('streamDestroyed', streamEvent);
@@ -3302,7 +3545,7 @@ var TBSession = function () {
             element.parentNode.removeChild(element);
           }
           delete streamElements[stream.streamId];
-          TBUpdateObjects();
+          tbUpdateObjects();
         }
         delete this.streams[stream.streamId];
       }
@@ -3326,7 +3569,7 @@ var TBSession = function () {
   }, {
     key: 'signalReceived',
     value: function signalReceived(event) {
-      pdebug('signalReceived event', event);
+      pdebug$1('signalReceived event', event);
       var streamEvent = new TBEvent({
         type: event.type,
         data: event.data,
@@ -3377,7 +3620,7 @@ var OT$1 = {
     // TB object only dispatches one type of event
     if (event === 'exception') {
       console.log('JS: TB Exception Handler added');
-      Cordova.exec(handler, OTError$1, OTPlugin$1, 'exceptionHandler', []);
+      Cordova.exec(handler, tbError, OTPlugin, 'exceptionHandler', []);
     }
   },
   setLogLevel: function setLogLevel() {
@@ -3390,7 +3633,7 @@ var OT$1 = {
     return {};
   },
   updateViews: function updateViews() {
-    return TBUpdateObjects$1();
+    return tbUpdateObjects();
   },
 
 

@@ -10,7 +10,7 @@ import {
 export const streamElements = {}; // keep track of DOM elements for each stream
 
 // Whenever updateViews are involved, parameters passed through will always have:
-// TBPublisher constructor, TBUpdateObjects, TBSubscriber constructor
+// TBPublisher constructor, tbUpdateObjects, TBSubscriber constructor
 // [id, top, left, width, height, zIndex, ... ]
 
 //
@@ -74,7 +74,7 @@ export const replaceWithVideoStream = (divName, streamId, properties) => {
   return element;
 };
 
-export const TBError = (error) => {
+export const tbError = (error) => {
   if (window.OT.errorCallback) {
     window.OT.errorCallback(error);
   } else {
@@ -82,47 +82,11 @@ export const TBError = (error) => {
   }
 };
 
-export const TBSuccess = () => {
+export const tbSuccess = () => {
   // console.log('success');
 };
 
-export const TBUpdateObjects = () => {
-  // console.log('JS: Objects being updated in TBUpdateObjects')
-  const objects = document.getElementsByClassName('OT_root');
-
-  const ratios = TBGetScreenRatios();
-
-  for (const e of objects) {
-    // console.log('JS: Object updated')
-    const streamId = e.dataset.streamid;
-    // console.log('JS sessionId: ' + streamId )
-    const id = e.id;
-    const position = getPosition(id);
-    const cordovaParams = [
-      streamId,
-      position.top,
-      position.left,
-      position.width,
-      position.height,
-      TBGetZIndex(e),
-      ratios.widthRatio,
-      ratios.heightRatio,
-      TBGetBorderRadius(e)
-    ];
-    Cordova.exec(TBSuccess, TBError, OTPlugin, 'updateView', cordovaParams);
-  }
-  return;
-};
-
-export const TBGenerateDomHelper = () => {
-  const domId = `PubSub ${Date.now()}`;
-  const div = document.createElement('div');
-  div.setAttribute('id', domId);
-  document.body.appendChild(div);
-  return domId;
-};
-
-export const TBGetZIndex = (element) => {
+export const tbGetZIndex = (element) => {
   let ele = element;
   while (ele) {
     const val = document.defaultView.getComputedStyle(ele, null).getPropertyValue('z-index');
@@ -136,12 +100,12 @@ export const TBGetZIndex = (element) => {
 };
 
 // Ratio between browser window size and viewport size
-export const TBGetScreenRatios = () => ({
+export const tbGetScreenRatios = () => ({
   widthRatio: window.outerWidth / window.innerWidth,
   heightRatio: window.outerHeight / window.innerHeight
 });
 
-export const TBGetBorderRadius = (element) => {
+export const tbGetBorderRadius = (element) => {
   let ele = element;
   while (ele) {
     const val = document.defaultView.getComputedStyle(ele, null).getPropertyValue('border-radius');
@@ -155,6 +119,42 @@ export const TBGetBorderRadius = (element) => {
     ele = ele.offsetParent;
   }
   return 0;
+};
+
+export const tbUpdateObjects = () => {
+  // console.log('JS: Objects being updated in tbUpdateObjects')
+  const objects = document.getElementsByClassName('OT_root');
+
+  const ratios = tbGetScreenRatios();
+
+  for (const e of objects) {
+    // console.log('JS: Object updated')
+    const streamId = e.dataset.streamid;
+    // console.log('JS sessionId: ' + streamId )
+    const id = e.id;
+    const position = getPosition(id);
+    const cordovaParams = [
+      streamId,
+      position.top,
+      position.left,
+      position.width,
+      position.height,
+      tbGetZIndex(e),
+      ratios.widthRatio,
+      ratios.heightRatio,
+      tbGetBorderRadius(e)
+    ];
+    Cordova.exec(tbSuccess, tbError, OTPlugin, 'updateView', cordovaParams);
+  }
+  return;
+};
+
+export const tbGenerateDomHelper = () => {
+  const domId = `PubSub ${Date.now()}`;
+  const div = document.createElement('div');
+  div.setAttribute('id', domId);
+  document.body.appendChild(div);
+  return domId;
 };
 
 export const pdebug = (msg, data) => {

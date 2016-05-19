@@ -1,6 +1,6 @@
 /* globals
  *   Cordova, getPosition, pdebug, replaceWithVideoStream,
- *   TBGetBorderRadius, TBGetScreenRatios, TBSuccess, TBError, TBGetZIndex,
+ *   tbGetBorderRadius, tbGetScreenRatios, tbSuccess, TBError, tbGetZIndex,
  */
 import { OTPlugin, DefaultHeight, DefaultWidth } from './constants';
 
@@ -21,7 +21,7 @@ export class TBSubscriber {
     }
     const divPosition = getPosition(divName);
     let subscribeToVideo = 'true';
-    const zIndex = TBGetZIndex(element);
+    const zIndex = tbGetZIndex(element);
     let width;
     let height;
     // let name;
@@ -46,8 +46,8 @@ export class TBSubscriber {
     }
     const obj = replaceWithVideoStream(divName, stream.streamId, { width, height });
     const position = getPosition(obj.id);
-    const ratios = TBGetScreenRatios();
-    const borderRadius = TBGetBorderRadius(element);
+    const ratios = tbGetScreenRatios();
+    const borderRadius = tbGetBorderRadius(element);
     pdebug('final subscriber position', position);
     const cordovaParams = [
       stream.streamId,
@@ -62,7 +62,7 @@ export class TBSubscriber {
       ratios.heightRatio,
       borderRadius
     ];
-    Cordova.exec(TBSuccess, TBError, OTPlugin, 'subscribe', cordovaParams);
+    Cordova.exec(tbSuccess, TBError, OTPlugin, 'subscribe', cordovaParams);
   }
 
   getAudioVolume() {

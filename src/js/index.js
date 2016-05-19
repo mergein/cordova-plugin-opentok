@@ -1,7 +1,6 @@
 /* globals Cordova, OTHelpers */
 import { OTPlugin } from './constants';
-import { OTError as TBError } from './error';
-import { pdebug, TBUpdateObjects } from './helpers';
+import { pdebug, tbError, tbUpdateObjects } from './helpers';
 import { TBPublisher } from './publisher';
 import { TBSession } from './session';
 
@@ -33,7 +32,7 @@ const OT = {
     // TB object only dispatches one type of event
     if (event === 'exception') {
       console.log('JS: TB Exception Handler added');
-      Cordova.exec(handler, TBError, OTPlugin, 'exceptionHandler', []);
+      Cordova.exec(handler, tbError, OTPlugin, 'exceptionHandler', []);
     }
   },
 
@@ -50,7 +49,7 @@ const OT = {
   },
 
   updateViews() {
-    return TBUpdateObjects();
+    return tbUpdateObjects();
   },
 
   // helpers
