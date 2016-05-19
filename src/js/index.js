@@ -3,6 +3,7 @@ import { OTPlugin } from './constants';
 import { pdebug, tbError, tbUpdateObjects } from './helpers';
 import { TBPublisher } from './publisher';
 import { TBSession } from './session';
+import './lib/OT-common-js-helpers';
 
 const OT = {
   checkSystemRequirements() {
