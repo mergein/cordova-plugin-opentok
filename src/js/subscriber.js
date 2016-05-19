@@ -1,9 +1,12 @@
 /* globals
- *   Cordova, DefaultHeight, DefaultWidth, getPosition, OTPlugin, pdebug, replaceWithVideoStream,
+ *   Cordova, getPosition, pdebug, replaceWithVideoStream,
  *   TBGetBorderRadius, TBGetScreenRatios, TBSuccess, TBError, TBGetZIndex,
  */
+import { OTPlugin, DefaultHeight, DefaultWidth } from './constants';
+
 export class TBSubscriber {
-  constructor(stream, divName, properties) {
+  constructor(stream, divName, props) {
+    const properties = props;
     const element = document.getElementById(divName);
     this.id = divName;
     this.element = element;

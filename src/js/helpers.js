@@ -1,6 +1,11 @@
-/* globals
- *   Cordova, OTPlugin, PublisherStreamId, PublisherTypeClass, SubscriberTypeClass, VideoContainerClass,
- *   WebKitCSSMatrix */
+/* globals Cordova, WebKitCSSMatrix */
+import {
+  OTPlugin,
+  PublisherStreamId,
+  PublisherTypeClass,
+  SubscriberTypeClass,
+  VideoContainerClass
+} from './constants';
 
 export const streamElements = {}; // keep track of DOM elements for each stream
 

@@ -1,4 +1,7 @@
-/* globals Cordova, OTHelpers, OTPlugin, pdebug, TBError, TBPublisher, TBUpdateObjects */
+/* globals Cordova, OTHelpers */
+import { OTPlugin } from './constants';
+import { TBError } from './error';
+import { pdebug, TBUpdateObjects } from './helpers';
 import { TBPublisher } from './publisher';
 import { TBSession } from './session';
 
