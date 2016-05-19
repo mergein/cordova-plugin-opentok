@@ -1,29 +1,3 @@
-var TBEvent,
-  __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-TBEvent = (function() {
-  function TBEvent(prop) {
-    this.preventDefault = __bind(this.preventDefault, this);
-    this.isDefaultPrevented = __bind(this.isDefaultPrevented, this);
-    var k, v;
-    for (k in prop) {
-      v = prop[k];
-      this[k] = v;
-    }
-    this.defaultPrevented = false;
-    return;
-  }
-
-  TBEvent.prototype.isDefaultPrevented = function() {
-    return this.defaultValue;
-  };
-
-  TBEvent.prototype.preventDefault = function() {};
-
-  return TBEvent;
-
-})();
-
 var TBError, TBGenerateDomHelper, TBGetBorderRadius, TBGetScreenRatios, TBGetZIndex, TBSuccess, TBUpdateObjects, getPosition, pdebug, replaceWithVideoStream, streamElements;
 
 streamElements = {};
