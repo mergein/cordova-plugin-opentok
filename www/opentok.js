@@ -127,26 +127,6 @@ pdebug = function(msg, data) {
   return console.log("JS Lib: " + msg + " - ", data);
 };
 
-var TBStream;
-
-TBStream = (function() {
-  function TBStream(prop, connection) {
-    var k, v;
-    this.connection = connection;
-    for (k in prop) {
-      v = prop[k];
-      this[k] = v;
-    }
-    this.videoDimensions = {
-      width: 0,
-      height: 0
-    };
-  }
-
-  return TBStream;
-
-})();
-
 var TBSubscriber;
 
 TBSubscriber = (function() {
