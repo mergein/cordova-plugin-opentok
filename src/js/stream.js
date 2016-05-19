@@ -6,5 +6,3 @@ export class TBStream {
     this.videoDimensions = { width: 0, height: 0 };
   }
 }
-
-window.TBStream = TBStream;

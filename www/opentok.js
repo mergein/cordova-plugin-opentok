@@ -2665,6 +2665,184 @@ babelHelpers.createClass = function () {
 
 babelHelpers;
 
+var OTPlugin$1 = 'OpenTokPlugin';
+
+var codesToTitle = {
+  1004: 'OTAuthorizationFailure',
+  1005: 'OTErrorInvalidSession',
+  1006: 'OTConnectionFailed    ',
+  1011: 'OTNullOrInvalidParameter',
+  // 1010: 'OTNotConnected ',
+  1015: 'OTSessionIllegalState ',
+  1503: 'OTNoMessagingServer    ',
+  1023: 'OTConnectionRefused    ',
+  1020: 'OTSessionStateFailed   ',
+  1403: 'OTP2PSessionMaxParticipants',
+  1021: 'OTSessionConnectionTimeout ',
+  // 2000: 'OTSessionInternalError  ',
+  1461: 'OTSessionInvalidSignalType',
+  1413: 'OTSessionSignalDataTooLong',
+  1022: 'OTConnectionDropped',
+  1112: 'OTSessionSubscriberNotFound',
+  1113: 'OTSessionPublisherNotFound',
+  // 0: 'OTPublisherSuccess',
+  1010: 'OTSessionDisconnected',
+  // 2000: 'OTPublisherInternalError',
+  1610: 'OTPublisherWebRTCError',
+  0: 'OTSubscriberSuccess$',
+  1542: 'OTConnectionTimedOut',
+  1541: 'OTSubscriberSessionDisconnected',
+  1600: 'OTSubscriberWebRTCError',
+  1604: 'OTSubscriberServerCannotFindStream',
+  2000: 'OTSubscriberInternalError'
+};
+
+var OTError$1 = function OTError(errCode, errMsg) {
+  babelHelpers.classCallCheck(this, OTError);
+
+  this.code = errCode;
+  if (errMsg) {
+    this.message = errMsg;
+  } else if (codesToTitle[errCode]) {
+    this.message = codesToTitle[errCode];
+  } else {
+    this.message = 'OpenTok Error';
+  }
+};
+
+// keep track of DOM elements for each stream
+
+// Whenever updateViews are involved, parameters passed through will always have:
+// TBPublisher constructor, TBUpdateObjects, TBSubscriber constructor
+// [id, top, left, width, height, zIndex, ... ]
+
+//
+// Helper methods
+//
+var getPosition$1 = function getPosition(divName) {
+  // Get the position of element
+  var pubDiv = document.getElementById(divName);
+  if (!pubDiv) {
+    return {};
+  }
+  var computedStyle = window.getComputedStyle ? getComputedStyle(pubDiv, null) : {};
+  var transform = new WebKitCSSMatrix(window.getComputedStyle(pubDiv).transform || '');
+  var width = pubDiv.offsetWidth;
+  var height = pubDiv.offsetHeight;
+  var curtop = pubDiv.offsetTop + transform.m41;
+  var curleft = pubDiv.offsetLeft + transform.m42;
+  pubDiv = pubDiv.offsetParent;
+  while (pubDiv) {
+    transform = new WebKitCSSMatrix(window.getComputedStyle(pubDiv).transform || '');
+    curleft += pubDiv.offsetLeft + transform.m41;
+    curtop += pubDiv.offsetTop + transform.m42;
+    pubDiv = pubDiv.offsetParent;
+  }
+  var marginTop = parseInt(computedStyle.marginTop, 10) || 0;
+  var marginBottom = parseInt(computedStyle.marginBottom, 10) || 0;
+  var marginLeft = parseInt(computedStyle.marginLeft, 10) || 0;
+  var marginRight = parseInt(computedStyle.marginRight, 10) || 0;
+  return {
+    top: curtop + marginTop,
+    left: curleft + marginLeft,
+    width: width - (marginLeft + marginRight),
+    height: height - (marginTop + marginBottom)
+  };
+};
+
+var TBError$1 = function TBError(error) {
+  if (window.OT.errorCallback) {
+    window.OT.errorCallback(error);
+  } else {
+    console.error(error);
+  }
+};
+
+var TBSuccess$1 = function TBSuccess() {
+  // console.log('success');
+};
+
+var TBUpdateObjects$1 = function TBUpdateObjects() {
+  // console.log('JS: Objects being updated in TBUpdateObjects')
+  var objects = document.getElementsByClassName('OT_root');
+
+  var ratios = TBGetScreenRatios$1();
+
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = objects[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var e = _step.value;
+
+      // console.log('JS: Object updated')
+      var streamId = e.dataset.streamid;
+      // console.log('JS sessionId: ' + streamId )
+      var id = e.id;
+      var position = getPosition$1(id);
+      var cordovaParams = [streamId, position.top, position.left, position.width, position.height, TBGetZIndex$1(e), ratios.widthRatio, ratios.heightRatio, TBGetBorderRadius$1(e)];
+      Cordova.exec(TBSuccess$1, TBError$1, OTPlugin$1, 'updateView', cordovaParams);
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+
+  return;
+};
+
+var TBGetZIndex$1 = function TBGetZIndex(element) {
+  var ele = element;
+  while (ele) {
+    var val = document.defaultView.getComputedStyle(ele, null).getPropertyValue('z-index');
+    // console.log val
+    if (parseInt(val, 10)) {
+      return val;
+    }
+    ele = ele.offsetParent;
+  }
+  return 0;
+};
+
+// Ratio between browser window size and viewport size
+var TBGetScreenRatios$1 = function TBGetScreenRatios() {
+  return {
+    widthRatio: window.outerWidth / window.innerWidth,
+    heightRatio: window.outerHeight / window.innerHeight
+  };
+};
+
+var TBGetBorderRadius$1 = function TBGetBorderRadius(element) {
+  var ele = element;
+  while (ele) {
+    var val = document.defaultView.getComputedStyle(ele, null).getPropertyValue('border-radius');
+    if (val && val.length > 1 && val !== '0px') {
+      if (val.indexOf('%') === val.length - 1) {
+        return Math.round(ele.offsetWidth * (parseFloat(val.substring(0, val.length - 1)) / 100));
+      } else if (val.indexOf('px') === val.length - 2) {
+        return parseInt(val.substring(0, val.length - 2), 10);
+      }
+    }
+    ele = ele.offsetParent;
+  }
+  return 0;
+};
+
+var pdebug$1 = function pdebug(msg, data) {
+  console.log('JS Lib: #{msg} - ', data);
+};
+
 /* global
  *   Cordova, DefaultHeight, DefaultWidth, getPosition, OT, OTPlugin, pdebug, PublisherStreamId,
  *   replaceWithVideoStream, TBError, TBEvent, TBGenerateDomHelper, TBGetBorderRadius,
@@ -3190,7 +3368,7 @@ var OT$1 = {
     return new TBSession(apiKey, sessionId);
   },
   log: function log(message) {
-    return pdebug('TB LOG', message);
+    return pdebug$1('TB LOG', message);
   },
   off: function off() /* event, handler */{
     // TODO
@@ -3199,7 +3377,7 @@ var OT$1 = {
     // TB object only dispatches one type of event
     if (event === 'exception') {
       console.log('JS: TB Exception Handler added');
-      Cordova.exec(handler, TBError, OTPlugin, 'exceptionHandler', []);
+      Cordova.exec(handler, OTError$1, OTPlugin$1, 'exceptionHandler', []);
     }
   },
   setLogLevel: function setLogLevel() {
@@ -3212,7 +3390,7 @@ var OT$1 = {
     return {};
   },
   updateViews: function updateViews() {
-    return TBUpdateObjects();
+    return TBUpdateObjects$1();
   },
 
 

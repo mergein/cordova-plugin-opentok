@@ -41,5 +41,3 @@ export class OTError {
     }
   }
 }
-
-window.OTError = OTError;

@@ -106,5 +106,3 @@ export class TBSubscriber {
     return this;
   }
 }
-
-window.TBSubscriber = TBSubscriber;

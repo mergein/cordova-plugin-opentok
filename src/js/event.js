@@ -15,5 +15,3 @@ export class TBEvent {
     return;
   }
 }
-
-window.TBEvent = TBEvent;

@@ -13,5 +13,3 @@ export class TBConnection {
     };
   }
 }
-
-window.TBConnection = TBConnection;
