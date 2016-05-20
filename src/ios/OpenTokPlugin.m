@@ -65,48 +65,53 @@
 // Called by TB.initPublisher()
 - (void)initPublisher:(CDVInvokedUrlCommand *)command{
     NSLog(@"initPublisher...");
-    BOOL bpubAudio = YES;
-    BOOL bpubVideo = YES;
-    
-    // Get Parameters
-    NSString* name = [command.arguments objectAtIndex:0];
-    int top = [[command.arguments objectAtIndex:1] intValue];
-    int left = [[command.arguments objectAtIndex:2] intValue];
-    int width = [[command.arguments objectAtIndex:3] intValue];
-    int height = [[command.arguments objectAtIndex:4] intValue];
-    int zIndex = [[command.arguments objectAtIndex:5] intValue];
-    int borderRadius = [[command.arguments objectAtIndex:8] intValue];
-    
-    NSString* publishAudio = [command.arguments objectAtIndex:6];
-    if ([publishAudio isEqualToString:@"false"]) {
-        bpubAudio = NO;
-    }
-    NSString* publishVideo = [command.arguments objectAtIndex:7];
-    if ([publishVideo isEqualToString:@"false"]) {
-        bpubVideo = NO;
-    }
-    
-    // Publish and set View
-    _publisher = [[OTPublisher alloc] initWithDelegate:self name:name];
-    [_publisher setPublishAudio:bpubAudio];
-    [_publisher setPublishVideo:bpubVideo];
-    [self.webView.superview addSubview:_publisher.view];
-    [_publisher.view setFrame:CGRectMake(left, top, width, height)];
-    if (zIndex>0) {
-        _publisher.view.layer.zPosition = zIndex;
-    }
-    NSString* cameraPosition = [command.arguments objectAtIndex:8];
-    if ([cameraPosition isEqualToString:@"back"]) {
-        _publisher.cameraPosition = AVCaptureDevicePositionBack;
-    }
-    _publisher.view.layer.cornerRadius = borderRadius;
-    _publisher.view.clipsToBounds = borderRadius ? YES : NO;
-    
-    NSLog(@"initPublisher done");
-    
-    // Return to Javascript
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    [self.commandDelegate runInBackground:^{
+        BOOL bpubAudio = YES;
+        BOOL bpubVideo = YES;
+        
+        // Get Parameters
+        NSString* name = [command.arguments objectAtIndex:0];
+        int top = [[command.arguments objectAtIndex:1] intValue];
+        int left = [[command.arguments objectAtIndex:2] intValue];
+        int width = [[command.arguments objectAtIndex:3] intValue];
+        int height = [[command.arguments objectAtIndex:4] intValue];
+        int zIndex = [[command.arguments objectAtIndex:5] intValue];
+        int borderRadius = [[command.arguments objectAtIndex:8] intValue];
+        
+        NSString* publishAudio = [command.arguments objectAtIndex:6];
+        if ([publishAudio isEqualToString:@"false"]) {
+            bpubAudio = NO;
+        }
+        NSString* publishVideo = [command.arguments objectAtIndex:7];
+        if ([publishVideo isEqualToString:@"false"]) {
+            bpubVideo = NO;
+        }
+        
+        // Publish and set View
+        _publisher = [[OTPublisher alloc] initWithDelegate:self name:name];
+        [_publisher setPublishAudio:bpubAudio];
+        [_publisher setPublishVideo:bpubVideo];
+        
+        [[NSOperationQueue mainQueue] addOperationWithBlock:^ {
+            [self.webView.superview addSubview:_publisher.view];
+            [_publisher.view setFrame:CGRectMake(left, top, width, height)];
+            if (zIndex>0) {
+                _publisher.view.layer.zPosition = zIndex;
+            }
+            NSString* cameraPosition = [command.arguments objectAtIndex:8];
+            if ([cameraPosition isEqualToString:@"back"]) {
+                _publisher.cameraPosition = AVCaptureDevicePositionBack;
+            }
+            _publisher.view.layer.cornerRadius = borderRadius;
+            _publisher.view.clipsToBounds = borderRadius ? YES : NO;
+            
+            NSLog(@"initPublisher done");
+            
+            // Return to Javascript
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        }];
+    }];
 }
 // Helper function to update Views
 - (void)updateView:(CDVInvokedUrlCommand*)command{
