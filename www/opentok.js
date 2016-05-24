@@ -652,15 +652,7 @@ var TBSession = function () {
     this.streams = {};
     this.alreadyPublishing = false;
     OT.getHelper().eventing(this);
-    Cordova.exec(tbSuccess, function () {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      console.log('error initiating session');
-      console.dir(args);
-      return tbError.apply(undefined, args);
-    }, OTPlugin, 'initSession', [this.apiKey, this.sessionId]);
+    Cordova.exec(tbSuccess, tbError, OTPlugin, 'initSession', [this.apiKey, this.sessionId]);
   }
 
   babelHelpers.createClass(TBSession, [{
