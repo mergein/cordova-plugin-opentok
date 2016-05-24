@@ -158,5 +158,5 @@ export const tbGenerateDomHelper = () => {
 };
 
 export const pdebug = (msg, data) => {
-  console.log('JS Lib: #{msg} - ', data);
+  console.log(`JS Lib: ${msg}:`, data);
 };
