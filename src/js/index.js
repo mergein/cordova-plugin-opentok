@@ -85,4 +85,4 @@ window.addEventListener('orientationchange', () => {
   }, 1000);
 }, false);
 
-module.exports.OT = window.TB = window.OT = OT;
+window.TB = window.OT = OT;
