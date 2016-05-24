@@ -32,7 +32,7 @@ export class TBSession {
     this.streams = {};
     this.alreadyPublishing = false;
     OT.getHelper().eventing(this);
-    Cordova.exec(tbSuccess, tbSuccess, OTPlugin, 'initSession', [this.apiKey, this.sessionId]);
+    Cordova.exec(tbSuccess, tbError, OTPlugin, 'initSession', [this.apiKey, this.sessionId]);
   }
 
   connect(token, connectCompletionCallback) {
@@ -44,7 +44,7 @@ export class TBSession {
     if (connectCompletionCallback) {
       this.on('sessionConnected', connectCompletionCallback);
     }
-    Cordova.exec(this.eventReceived, tbError, OTPlugin, 'addEvent', ['sessionEvents']);
+    Cordova.exec(this.eventReceived.bind(this), tbError, OTPlugin, 'addEvent', ['sessionEvents']);
     Cordova.exec(tbSuccess, tbError, OTPlugin, 'connect', [this.token]);
     return;
   }
@@ -217,7 +217,13 @@ export class TBSession {
   //   signal:type?
   eventReceived(response) {
     pdebug('session event received', response);
-    return this[response.eventType](response.data);
+    const { data, eventType } = response;
+    const { [eventType]: handler } = this;
+    if (handler) {
+      return handler.bind(this)(data);
+    }
+    console.log(`handler for event ${eventType} not found`);
+    return null;
   }
 
   connectionCreated(event) {

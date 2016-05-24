@@ -85,7 +85,13 @@ export class TBPublisher {
       borderRadius
     ];
     Cordova.exec(onSuccess, onError, OTPlugin, 'initPublisher', initPublisherParams);
-    Cordova.exec(this.eventReceived, tbSuccess, OTPlugin, 'addEvent', ['publisherEvents']);
+    Cordova.exec(
+      this.eventReceived.bind(this),
+      tbSuccess,
+      OTPlugin,
+      'addEvent',
+      ['publisherEvents']
+    );
   }
 
   setSession(session) {
@@ -94,7 +100,13 @@ export class TBPublisher {
 
   eventReceived(response) {
     pdebug('publisher event received', response);
-    return this[response.eventType](response.data);
+    const { data, eventType } = response;
+    const { [eventType]: handler } = this;
+    if (handler) {
+      return handler.bind(this)(data);
+    }
+    console.log(`handler for event ${eventType} not found`);
+    return null;
   }
 
   streamCreated(event) {
