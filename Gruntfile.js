@@ -22,7 +22,7 @@ module.exports = function (grunt) {
         ]
       },
       files: {
-        dest: './www/rollup.js',
+        dest: './www/opentok.js',
         src: 'src/js/index.js'
       }
     },
@@ -43,5 +43,5 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-rollup');
 
   // Default task(s).
-  grunt.registerTask('default', ['rollup', 'uglify']);
+  grunt.registerTask('default', ['rollup']);
 };
