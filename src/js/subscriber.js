@@ -1,8 +1,15 @@
-/* globals
- *   Cordova, getPosition, pdebug, replaceWithVideoStream,
- *   tbGetBorderRadius, tbGetScreenRatios, tbSuccess, TBError, tbGetZIndex,
- */
+/* globals Cordova */
 import { OTPlugin, DefaultHeight, DefaultWidth } from './constants';
+import {
+  getPosition,
+  pdebug,
+  replaceWithVideoStream,
+  tbGetBorderRadius,
+  tbGetScreenRatios,
+  tbSuccess,
+  tbError,
+  tbGetZIndex
+} from './helpers';
 
 export class TBSubscriber {
   constructor(stream, divName, props) {
@@ -62,7 +69,7 @@ export class TBSubscriber {
       ratios.heightRatio,
       borderRadius
     ];
-    Cordova.exec(tbSuccess, TBError, OTPlugin, 'subscribe', cordovaParams);
+    Cordova.exec(tbSuccess, tbError, OTPlugin, 'subscribe', cordovaParams);
   }
 
   getAudioVolume() {
