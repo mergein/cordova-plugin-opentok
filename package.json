@@ -1,17 +1,49 @@
 {
-  "name": "Cordova-Plugin-OpenTok",
+  "name": "cordova-plugin-opentok",
   "version": "2.2.0",
+  "main": "./www/opentok.js",
+  "scripts": {
+    "build": "grunt",
+    "lint": "eslint src/js",
+    "watch": "grunt watch"
+  },
   "devDependencies": {
+    "babel-preset-es2015-rollup": "^1.1.1",
+    "eslint": "^2.8.0",
+    "eslint-config-airbnb": "^7.0.0",
     "grunt": "^0.4.5",
-    "grunt-contrib-coffee": "^0.10.1",
+    "grunt-babel": "^6.0.0",
+    "grunt-cli": "^1.2.0",
     "grunt-contrib-concat": "^0.4.0",
     "grunt-contrib-jshint": "~0.10.0",
     "grunt-contrib-nodeunit": "~0.3.3",
     "grunt-contrib-uglify": "~0.4.0",
-    "grunt-contrib-watch": "~0.6.1"
+    "grunt-contrib-watch": "~0.6.1",
+    "grunt-rollup": "^0.7.1",
+    "rollup-plugin-babel": "^2.4.0"
   },
   "dependencies": {
     "exec": "^0.2.0",
     "tar": "^1.0.3"
+  },
+  "babel": {
+    "presets": [
+      "es2015-rollup"
+    ]
+  },
+  "eslintConfig": {
+    "extends": "airbnb",
+    "rules": {
+      "comma-dangle": [
+        "error",
+        "never"
+      ],
+      "func-names": [
+        "off"
+      ],
+      "no-shadow": [
+        "off"
+      ]
+    }
   }
 }

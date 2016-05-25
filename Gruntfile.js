@@ -1,39 +1,34 @@
-module.exports = function(grunt) {
+var babel = require('rollup-plugin-babel');
 
+module.exports = function (grunt) {
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    watch:{
-      scripts: {
-        files:['**/*.coffee'],
-        tasks:["coffee", "concat"],
-        options:{
-          spawn: true,
+    watch: {
+      scripts: [{
+        files: ['src/**/*.js'],
+        tasks: ['rollup', 'concat'],
+        options: {
+          spawn: true
         }
-      },
+      }]
     },
-    coffee: {
-      compileBare:{
-        options:{
-          bare: true
-        },
-        files: {
-          "./www/opentok.js" : "./src/js/*.coffee"
-        }
-      }
-    },
-    concat:{
-      options:{
-        separator: ';'
+    rollup: {
+      options: {
+        plugins: [
+          babel({
+            exclude: './node_modules/**'
+          })
+        ]
       },
-      dist:{
-        src:["./www/opentok.js", "./src/js/lib/OT-common-js-helpers.js"],
-        dest:"./www/opentok.js"
+      files: {
+        dest: './www/opentok.js',
+        src: 'src/js/index.js'
       }
     },
     uglify: {
       options: {
-        banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+        banner: '/*! <%= pkg.name %> <%= grunt.template.today(\'yyyy-mm-dd\') %> */\n'
       },
       build: {
         src: 'www/opentok.js',
@@ -42,12 +37,11 @@ module.exports = function(grunt) {
     }
   });
 
-  // Load the plugin that provides the "uglify" task.
+  // Load the plugin that provides the 'uglify' task.
   grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-rollup');
 
   // Default task(s).
-  grunt.registerTask('default', ["coffee", "concat"]);
+  grunt.registerTask('default', ['rollup']);
 };

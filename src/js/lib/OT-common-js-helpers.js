@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * @license  Common JS Helpers on OpenTok 0.2.0 1f056b9 master
  * http://www.tokbox.com/
