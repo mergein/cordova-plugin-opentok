@@ -38,22 +38,25 @@ export class TBPublisher {
     const borderRadius = tbGetBorderRadius(this.element);
     let height;
     let width;
-    if (this.properties) {
-      width = this.properties.width || position.width;
-      height = this.properties.height || position.height;
-      name = this.properties.name || '';
-      cameraName = this.properties.cameraName || 'front';
-      if (this.properties.publishAudio && !this.properties.publishAudio) {
+
+    if (properties) {
+      width = properties.width || position.width;
+      height = properties.height || position.height;
+      name = properties.name || '';
+      cameraName = properties.cameraName || 'front';
+      if (properties.publishAudio !== undefined && !properties.publishAudio) {
         publishAudio = 'false';
       }
-      if (this.properties.publishVideo && !this.properties.publishVideo) {
+      if (properties.publishVideo !== undefined && !properties.publishVideo) {
         publishVideo = 'false';
       }
     }
+
     if (!width || !height) {
       width = DefaultWidth;
       height = DefaultHeight;
     }
+
     const obj = replaceWithVideoStream(this.domId, PublisherStreamId, { width, height });
     position = getPosition(obj.id);
     tbUpdateObjects();
