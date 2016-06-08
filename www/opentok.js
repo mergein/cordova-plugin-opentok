@@ -748,31 +748,33 @@ var TBSession = function () {
       if (four) {
         var _stream = one;
         var _two = two;
-        var omId = _two === undefined ? tbGenerateDomHelper() : _two;
+
+        var _domId = _two === undefined ? tbGenerateDomHelper() : _two;
+
         var properties = three;
         var completionHandler = four;
 
 
         this.subscriberCallbacks[_stream.streamId] = completionHandler;
-        return new TBSubscriber(_stream, domId, properties);
+        return new TBSubscriber(_stream, _domId, properties);
       }
 
       if (three) {
         if ((typeof two === 'string' || two.nodeType === 1) && (typeof three === 'undefined' ? 'undefined' : babelHelpers.typeof(three)) === 'object') {
           var _stream2 = one;
-          var _domId = two;
+          var _domId2 = two;
           var _properties = three;
 
-          return new TBSubscriber(_stream2, _domId, _properties);
+          return new TBSubscriber(_stream2, _domId2, _properties);
         }
 
         if ((typeof two === 'string' || two.nodeType === 1) && typeof three === 'function') {
           var _stream3 = one;
-          var _domId2 = two;
+          var _domId3 = two;
           var _completionHandler = three;
 
           this.subscriberCallbacks[_stream3.streamId] = _completionHandler;
-          return new TBSubscriber(_stream3, _domId2, {});
+          return new TBSubscriber(_stream3, _domId3, {});
         }
 
         if ((typeof two === 'undefined' ? 'undefined' : babelHelpers.typeof(two)) === 'object' && typeof three === 'function') {
@@ -781,25 +783,25 @@ var TBSession = function () {
           var _completionHandler2 = three;
 
           this.subscriberCallbacks[_stream4.streamId] = _completionHandler2;
-          var _domId3 = tbGenerateDomHelper();
-          return new TBSubscriber(_stream4, _domId3, _properties2);
+          var _domId4 = tbGenerateDomHelper();
+          return new TBSubscriber(_stream4, _domId4, _properties2);
         }
       }
 
       if (two) {
         if (typeof two === 'string' || two.nodeType === 1) {
           var _stream5 = one;
-          var _domId4 = two;
+          var _domId5 = two;
 
-          return new TBSubscriber(_stream5, _domId4, {});
+          return new TBSubscriber(_stream5, _domId5, {});
         }
 
         if ((typeof two === 'undefined' ? 'undefined' : babelHelpers.typeof(two)) === 'object') {
           var _stream6 = one;
           var _properties3 = two;
 
-          var _domId5 = tbGenerateDomHelper();
-          return new TBSubscriber(_stream6, _domId5, _properties3);
+          var _domId6 = tbGenerateDomHelper();
+          return new TBSubscriber(_stream6, _domId6, _properties3);
         }
 
         if (typeof two === 'function') {
@@ -807,8 +809,8 @@ var TBSession = function () {
           var _completionHandler3 = two;
 
           this.subscriberCallbacks[_stream7.streamId] = _completionHandler3;
-          var _domId6 = tbGenerateDomHelper();
-          return new TBSubscriber(_stream7, _domId6, {});
+          var _domId7 = tbGenerateDomHelper();
+          return new TBSubscriber(_stream7, _domId7, {});
         }
       }
 

@@ -106,7 +106,7 @@ export class TBSession {
     if (four) {
       const [
         stream,
-        omId = tbGenerateDomHelper(),
+        domId = tbGenerateDomHelper(),
         properties,
         completionHandler
       ] = [one, two, three, four];
