@@ -1,8 +1,6 @@
 /* global Cordova, OT, TB, TBStream, TBStreamConnection */
 import { TBConnection } from './connection';
-import {
-  OTPlugin
-} from './constants';
+import { OTPlugin } from './constants';
 import { OTError } from './error';
 import { TBEvent } from './event';
 import {
@@ -106,58 +104,60 @@ export class TBSession {
   subscribe(one, two, three, four) {
     this.subscriberCallbacks = {};
     if (four) {
-      // stream,domId, properties, completionHandler
-      const domId = two || tbGenerateDomHelper();
-      const subscriber = new TBSubscriber(one, domId, three);
-      this.subscriberCallbacks[one.streamId] = four;
-      return subscriber;
+      const [
+        stream,
+        omId = tbGenerateDomHelper(),
+        properties,
+        completionHandler
+      ] = [one, two, three, four];
+
+      this.subscriberCallbacks[stream.streamId] = completionHandler;
+      return new TBSubscriber(stream, domId, properties);
     }
+
     if (three) {
-      // stream, domId, properties
-      // || stream, domId, completionHandler
-      // || stream, properties, completionHandler
       if ((typeof two === 'string' || two.nodeType === 1) && typeof three === 'object') {
-        console.log('stream, domId, props');
-        const subscriber = new TBSubscriber(one, two, three);
-        return subscriber;
+        const [stream, domId, properties] = [one, two, three];
+        return new TBSubscriber(stream, domId, properties);
       }
+
       if ((typeof two === 'string' || two.nodeType === 1) && typeof three === 'function') {
-        console.log('stream, domId, completionHandler');
-        this.subscriberCallbacks[one.streamId] = three;
-        const domId = two;
-        const subscriber = new TBSubscriber(one, domId, {});
-        return subscriber;
+        const [stream, domId, completionHandler] = [one, two, three];
+        this.subscriberCallbacks[stream.streamId] = completionHandler;
+        return new TBSubscriber(stream, domId, {});
       }
+
       if (typeof two === 'object' && typeof three === 'function') {
-        console.log('stream, props, completionHandler');
-        this.subscriberCallbacks[one.streamId] = three;
+        const [stream, properties, completionHandler] = [one, two, three];
+        this.subscriberCallbacks[stream.streamId] = completionHandler;
         const domId = tbGenerateDomHelper();
-        const subscriber = new TBSubscriber(one, domId, two);
-        return subscriber;
+        return new TBSubscriber(stream, domId, properties);
       }
     }
+
     if (two) {
-      // stream, domId || stream, properties || stream,completionHandler
       if (typeof two === 'string' || two.nodeType === 1) {
-        const subscriber = new TBSubscriber(one, two, {});
-        return subscriber;
+        const [stream, domId] = [one, two];
+        return new TBSubscriber(stream, domId, {});
       }
+
       if (typeof two === 'object') {
+        const [stream, properties] = [one, two];
         const domId = tbGenerateDomHelper();
-        const subscriber = new TBSubscriber(one, domId, two);
-        return subscriber;
+        return new TBSubscriber(stream, domId, properties);
       }
+
       if (typeof two === 'function') {
-        this.subscriberCallbacks[one.streamId] = two;
+        const [stream, completionHandler] = [one, two];
+        this.subscriberCallbacks[stream.streamId] = completionHandler;
         const domId = tbGenerateDomHelper();
-        const subscriber = new TBSubscriber(one, domId, {});
-        return subscriber;
+        return new TBSubscriber(stream, domId, {});
       }
     }
-    // stream
+
+    const stream = one;
     const domId = tbGenerateDomHelper();
-    const subscriber = new TBSubscriber(one, domId, {});
-    return subscriber;
+    return new TBSubscriber(stream, domId, {});
   }
 
   unpublish(publisher) {

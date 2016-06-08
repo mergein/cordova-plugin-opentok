@@ -20,23 +20,31 @@ export const getPosition = (divName) => {
   // Get the position of element
   let pubDiv = document.getElementById(divName);
   if (!pubDiv) { return {}; }
+
   const computedStyle = window.getComputedStyle ? getComputedStyle(pubDiv, null) : {};
+
   let transform = new WebKitCSSMatrix(window.getComputedStyle(pubDiv).transform || '');
+
   const width = pubDiv.offsetWidth;
   const height = pubDiv.offsetHeight;
+
   let curtop = pubDiv.offsetTop + transform.m41;
   let curleft = pubDiv.offsetLeft + transform.m42;
+
   pubDiv = pubDiv.offsetParent;
+
   while (pubDiv) {
     transform = new WebKitCSSMatrix(window.getComputedStyle(pubDiv).transform || '');
     curleft += pubDiv.offsetLeft + transform.m41;
     curtop += pubDiv.offsetTop + transform.m42;
     pubDiv = pubDiv.offsetParent;
   }
+
   const marginTop = parseInt(computedStyle.marginTop, 10) || 0;
   const marginBottom = parseInt(computedStyle.marginBottom, 10) || 0;
   const marginLeft = parseInt(computedStyle.marginLeft, 10) || 0;
   const marginRight = parseInt(computedStyle.marginRight, 10) || 0;
+
   return {
     top: curtop + marginTop,
     left: curleft + marginLeft,

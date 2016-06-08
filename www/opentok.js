@@ -291,6 +291,8 @@ var TBPublisher = function () {
   function TBPublisher(targetElement, properties, completionHandler) {
     babelHelpers.classCallCheck(this, TBPublisher);
 
+    console.log('TBPublisher:');
+    console.dir({ completionHandler: completionHandler });
     if (!targetElement) {
       this.domId = tbGenerateDomHelper();
       this.element = document.getElementById(this.domId);
@@ -701,6 +703,9 @@ var TBSession = function () {
   }, {
     key: 'publish',
     value: function publish(publisher, completionHandler) {
+      console.trace('publish');
+      console.log('TBSession.publish:');
+      console.dir({ completionHandler: completionHandler });
       if (this.alreadyPublishing) {
         pdebug('Session is already publishing', {});
         return publisher;
@@ -3498,6 +3503,8 @@ var OT$1 = {
     return 1;
   },
   initPublisher: function initPublisher(targetElement, properties, completionHandler) {
+    console.log('initPublisher:');
+    console.dir({ completionHandler: completionHandler });
     return new TBPublisher(targetElement, properties, completionHandler);
   },
   initSession: function initSession(apiKey, sessionId) {
