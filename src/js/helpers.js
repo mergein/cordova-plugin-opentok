@@ -53,13 +53,12 @@ export const getPosition = (divName) => {
   };
 };
 
-export const replaceWithVideoStream = (divName, streamId, properties) => {
+export const replaceWithVideoStream = (divName, streamId) => {
   const typeClass = streamId === PublisherStreamId ? PublisherTypeClass : SubscriberTypeClass;
   const element = document.getElementById(divName);
   element.setAttribute('class', `OT_root ${typeClass}`);
   element.setAttribute('data-streamid', streamId);
-  element.style.width = `${properties.width}px`;
-  element.style.height = `${properties.height}px`;
+
   element.style.overflow = 'hidden';
   element.style['background-color'] = '#000000';
   streamElements[streamId] = element;

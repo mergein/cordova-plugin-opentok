@@ -54,23 +54,31 @@ var getPosition = function getPosition(divName) {
   if (!pubDiv) {
     return {};
   }
+
   var computedStyle = window.getComputedStyle ? getComputedStyle(pubDiv, null) : {};
+
   var transform = new WebKitCSSMatrix(window.getComputedStyle(pubDiv).transform || '');
+
   var width = pubDiv.offsetWidth;
   var height = pubDiv.offsetHeight;
+
   var curtop = pubDiv.offsetTop + transform.m41;
   var curleft = pubDiv.offsetLeft + transform.m42;
+
   pubDiv = pubDiv.offsetParent;
+
   while (pubDiv) {
     transform = new WebKitCSSMatrix(window.getComputedStyle(pubDiv).transform || '');
     curleft += pubDiv.offsetLeft + transform.m41;
     curtop += pubDiv.offsetTop + transform.m42;
     pubDiv = pubDiv.offsetParent;
   }
+
   var marginTop = parseInt(computedStyle.marginTop, 10) || 0;
   var marginBottom = parseInt(computedStyle.marginBottom, 10) || 0;
   var marginLeft = parseInt(computedStyle.marginLeft, 10) || 0;
   var marginRight = parseInt(computedStyle.marginRight, 10) || 0;
+
   return {
     top: curtop + marginTop,
     left: curleft + marginLeft,
@@ -79,13 +87,12 @@ var getPosition = function getPosition(divName) {
   };
 };
 
-var replaceWithVideoStream = function replaceWithVideoStream(divName, streamId, properties) {
+var replaceWithVideoStream = function replaceWithVideoStream(divName, streamId) {
   var typeClass = streamId === PublisherStreamId ? PublisherTypeClass : SubscriberTypeClass;
   var element = document.getElementById(divName);
   element.setAttribute('class', 'OT_root ' + typeClass);
   element.setAttribute('data-streamid', streamId);
-  element.style.width = properties.width + 'px';
-  element.style.height = properties.height + 'px';
+
   element.style.overflow = 'hidden';
   element.style['background-color'] = '#000000';
   streamElements[streamId] = element;
@@ -291,8 +298,6 @@ var TBPublisher = function () {
   function TBPublisher(targetElement, properties, completionHandler) {
     babelHelpers.classCallCheck(this, TBPublisher);
 
-    console.log('TBPublisher:');
-    console.dir({ completionHandler: completionHandler });
     if (!targetElement) {
       this.domId = tbGenerateDomHelper();
       this.element = document.getElementById(this.domId);
@@ -703,9 +708,6 @@ var TBSession = function () {
   }, {
     key: 'publish',
     value: function publish(publisher, completionHandler) {
-      console.trace('publish');
-      console.log('TBSession.publish:');
-      console.dir({ completionHandler: completionHandler });
       if (this.alreadyPublishing) {
         pdebug('Session is already publishing', {});
         return publisher;
@@ -744,58 +746,75 @@ var TBSession = function () {
     value: function subscribe(one, two, three, four) {
       this.subscriberCallbacks = {};
       if (four) {
-        // stream,domId, properties, completionHandler
-        var _domId = two || tbGenerateDomHelper();
-        var _subscriber = new TBSubscriber(one, _domId, three);
-        this.subscriberCallbacks[one.streamId] = four;
-        return _subscriber;
+        var _stream = one;
+        var _two = two;
+        var omId = _two === undefined ? tbGenerateDomHelper() : _two;
+        var properties = three;
+        var completionHandler = four;
+
+
+        this.subscriberCallbacks[_stream.streamId] = completionHandler;
+        return new TBSubscriber(_stream, domId, properties);
       }
+
       if (three) {
-        // stream, domId, properties
-        // || stream, domId, completionHandler
-        // || stream, properties, completionHandler
         if ((typeof two === 'string' || two.nodeType === 1) && (typeof three === 'undefined' ? 'undefined' : babelHelpers.typeof(three)) === 'object') {
-          console.log('stream, domId, props');
-          var _subscriber2 = new TBSubscriber(one, two, three);
-          return _subscriber2;
+          var _stream2 = one;
+          var _domId = two;
+          var _properties = three;
+
+          return new TBSubscriber(_stream2, _domId, _properties);
         }
+
         if ((typeof two === 'string' || two.nodeType === 1) && typeof three === 'function') {
-          console.log('stream, domId, completionHandler');
-          this.subscriberCallbacks[one.streamId] = three;
+          var _stream3 = one;
           var _domId2 = two;
-          var _subscriber3 = new TBSubscriber(one, _domId2, {});
-          return _subscriber3;
+          var _completionHandler = three;
+
+          this.subscriberCallbacks[_stream3.streamId] = _completionHandler;
+          return new TBSubscriber(_stream3, _domId2, {});
         }
+
         if ((typeof two === 'undefined' ? 'undefined' : babelHelpers.typeof(two)) === 'object' && typeof three === 'function') {
-          console.log('stream, props, completionHandler');
-          this.subscriberCallbacks[one.streamId] = three;
+          var _stream4 = one;
+          var _properties2 = two;
+          var _completionHandler2 = three;
+
+          this.subscriberCallbacks[_stream4.streamId] = _completionHandler2;
           var _domId3 = tbGenerateDomHelper();
-          var _subscriber4 = new TBSubscriber(one, _domId3, two);
-          return _subscriber4;
+          return new TBSubscriber(_stream4, _domId3, _properties2);
         }
       }
+
       if (two) {
-        // stream, domId || stream, properties || stream,completionHandler
         if (typeof two === 'string' || two.nodeType === 1) {
-          var _subscriber5 = new TBSubscriber(one, two, {});
-          return _subscriber5;
+          var _stream5 = one;
+          var _domId4 = two;
+
+          return new TBSubscriber(_stream5, _domId4, {});
         }
+
         if ((typeof two === 'undefined' ? 'undefined' : babelHelpers.typeof(two)) === 'object') {
-          var _domId4 = tbGenerateDomHelper();
-          var _subscriber6 = new TBSubscriber(one, _domId4, two);
-          return _subscriber6;
-        }
-        if (typeof two === 'function') {
-          this.subscriberCallbacks[one.streamId] = two;
+          var _stream6 = one;
+          var _properties3 = two;
+
           var _domId5 = tbGenerateDomHelper();
-          var _subscriber7 = new TBSubscriber(one, _domId5, {});
-          return _subscriber7;
+          return new TBSubscriber(_stream6, _domId5, _properties3);
+        }
+
+        if (typeof two === 'function') {
+          var _stream7 = one;
+          var _completionHandler3 = two;
+
+          this.subscriberCallbacks[_stream7.streamId] = _completionHandler3;
+          var _domId6 = tbGenerateDomHelper();
+          return new TBSubscriber(_stream7, _domId6, {});
         }
       }
-      // stream
+
+      var stream = one;
       var domId = tbGenerateDomHelper();
-      var subscriber = new TBSubscriber(one, domId, {});
-      return subscriber;
+      return new TBSubscriber(stream, domId, {});
     }
   }, {
     key: 'unpublish',
@@ -3503,8 +3522,6 @@ var OT$1 = {
     return 1;
   },
   initPublisher: function initPublisher(targetElement, properties, completionHandler) {
-    console.log('initPublisher:');
-    console.dir({ completionHandler: completionHandler });
     return new TBPublisher(targetElement, properties, completionHandler);
   },
   initSession: function initSession(apiKey, sessionId) {
