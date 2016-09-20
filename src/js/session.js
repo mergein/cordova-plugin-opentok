@@ -165,6 +165,10 @@ export class TBSession {
       pdebug('Wrong publisher specified', {});
       return null;
     }
+    if (!publisher) {
+      pdebug('Cannot unpublish null publisher');
+      return null;
+    }
     this.alreadyPublishing = false;
     this.publisher = null;
     console.log('JS: Unpublish');
