@@ -122,15 +122,11 @@ export const tbGetBorderRadius = (element) => {
 };
 
 export const tbUpdateObjects = () => {
-  // console.log('JS: Objects being updated in tbUpdateObjects')
   const objects = document.getElementsByClassName('OT_root');
-
   const ratios = tbGetScreenRatios();
-
-  for (const e of objects) {
-    // console.log('JS: Object updated')
+  const objectsArray = [].slice.call(objects);
+  for (const e of objectsArray) {
     const streamId = e.dataset.streamid;
-    // console.log('JS sessionId: ' + streamId )
     const id = e.id;
     const position = getPosition(id);
     const cordovaParams = [

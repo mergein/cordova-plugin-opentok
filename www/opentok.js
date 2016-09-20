@@ -158,22 +158,18 @@ var tbGetBorderRadius = function tbGetBorderRadius(element) {
 };
 
 var tbUpdateObjects = function tbUpdateObjects() {
-  // console.log('JS: Objects being updated in tbUpdateObjects')
   var objects = document.getElementsByClassName('OT_root');
-
   var ratios = tbGetScreenRatios();
-
+  var objectsArray = [].slice.call(objects);
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
   var _iteratorError = undefined;
 
   try {
-    for (var _iterator = objects[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+    for (var _iterator = objectsArray[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
       var e = _step.value;
 
-      // console.log('JS: Object updated')
       var streamId = e.dataset.streamid;
-      // console.log('JS sessionId: ' + streamId )
       var id = e.id;
       var position = getPosition(id);
       var cordovaParams = [streamId, position.top, position.left, position.width, position.height, tbGetZIndex(e), ratios.widthRatio, ratios.heightRatio, tbGetBorderRadius(e)];
