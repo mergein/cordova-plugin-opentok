@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
-    xmlns:android="http://schemas.android.com/apk/res/android"
     id="com.tokbox.cordova.opentok"
     version="1.0.3">
 
@@ -8,36 +7,6 @@
     <description>Add live video streaming to your Cordova Application</description>
     <license>Apache 2.0</license>
     <keywords>opentok,tokbox</keywords>
-
-    <platform name="android">
-      <asset src="www/opentok.js" target="opentok.js" />
-
-      <source-file src="src/android/com/tokbox/cordova/OpenTokAndroidPlugin.java"
-        target-dir="src/com/tokbox/cordova/" />
-
-      <config-file target="AndroidManifest.xml" parent="/manifest">
-        <uses-permission android:name="android.permission.CAMERA" />
-        <uses-permission android:name="android.permission.INTERNET" />
-        <uses-permission android:name="android.permission.RECORD_AUDIO" />
-        <uses-permission android:name="android.permission.WAKE_LOCK" />
-        <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-        <uses-feature android:name="android.hardware.camera" android:required="true" />
-        <uses-feature android:name="android.hardware.camera.autofocus" android:required="true" />
-      </config-file>
-
-      <!-- copy opentok sdk -->
-      <source-file src="src/android/libs/opentok-android-sdk-2.5.0.jar" target-dir="libs/" />
-      <source-file src="src/android/libs/armeabi/libopentok.so" target-dir="libs/armeabi" />
-      <source-file src="src/android/libs/armeabi/libopentok.so" target-dir="libs/armeabi-v7a" />
-      <source-file src="src/android/libs/x86/libopentok.so" target-dir="libs/x86" />
-
-      <config-file target="config.xml" parent="/*">
-        <feature name="OpenTokPlugin">
-          <param name="android-package" value="com.tokbox.cordova.OpenTokAndroidPlugin"/>
-        </feature>
-      </config-file>
-
-    </platform>
 
     <!-- ios -->
     <platform name="ios">
