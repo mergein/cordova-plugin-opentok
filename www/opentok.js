@@ -297,7 +297,6 @@ var TBPublisher = function () {
       this.element = targetElement;
       this.domId = targetElement.id;
     }
-    pdebug('creating publisher', {});
     var position = getPosition(this.domId);
     var name = '';
     var publishAudio = 'true';
@@ -326,18 +325,21 @@ var TBPublisher = function () {
       width = DefaultWidth;
       height = DefaultHeight;
     }
+    pdebug('creating publisher', properties, this.domId, PublisherStreamId, width, height);
 
     var obj = replaceWithVideoStream(this.domId, PublisherStreamId, { width: width, height: height });
     position = getPosition(obj.id);
     tbUpdateObjects();
     OT.getHelper().eventing(this);
     var onSuccess = function onSuccess(result) {
+      pdebug('init publisher success:', result);
       if (completionHandler) {
         completionHandler();
       }
       return tbSuccess(result);
     };
     var onError = function onError(result) {
+      pdebug('init publisher error:', result);
       if (completionHandler) {
         completionHandler(result);
       }

@@ -27,7 +27,6 @@ export class TBPublisher {
       this.element = targetElement;
       this.domId = targetElement.id;
     }
-    pdebug('creating publisher', {});
     let position = getPosition(this.domId);
     let name = '';
     let publishAudio = 'true';
@@ -56,18 +55,21 @@ export class TBPublisher {
       width = DefaultWidth;
       height = DefaultHeight;
     }
+    pdebug('creating publisher', properties, this.domId, PublisherStreamId, width, height);
 
     const obj = replaceWithVideoStream(this.domId, PublisherStreamId, { width, height });
     position = getPosition(obj.id);
     tbUpdateObjects();
     OT.getHelper().eventing(this);
     const onSuccess = (result) => {
+      pdebug('init publisher success:', result);
       if (completionHandler) {
         completionHandler();
       }
       return tbSuccess(result);
     };
     const onError = (result) => {
+      pdebug('init publisher error:', result);
       if (completionHandler) {
         completionHandler(result);
       }
