@@ -5,7 +5,6 @@
 node_modules
 opentok-ios-sdk-*
 OpenTok-iOS-*
-src/ios/OpenTok.framework
 .idea/
 www
 !www/opentok.js
