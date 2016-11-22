@@ -1,10 +1,2 @@
-.DS_Store
-*.DS_Store
-*.swp
 */node_modules
 node_modules
-opentok-ios-sdk-*
-OpenTok-iOS-*
-.idea/
-www
-!www/opentok.js
